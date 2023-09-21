@@ -2,7 +2,7 @@
 
 Welcome to the Java Chess project with a Minimax AI bot! This project allows you to play chess against a computer opponent that uses the Minimax algorithm to make strategic decisions. You can test your chess skills and challenge yourself against this intelligent opponent.
 
-![Chess]([chess.jpg](https://th.bing.com/th/id/R.5785f0df9d43041b0c3449c0e46528ae?rik=Gwz7g4zkfxagNg&pid=ImgRaw&r=0))
+![Chess]([[chess.jpg](https://th.bing.com/th/id/R.5785f0df9d43041b0c3449c0e46528ae?rik=Gwz7g4zkfxagNg&pid=ImgRaw&r=0)](https://betacssjs.chesscomfiles.com/bundles/web/images/offline-play/standardboard.png))
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
