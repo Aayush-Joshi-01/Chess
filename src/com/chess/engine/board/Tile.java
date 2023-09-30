@@ -7,7 +7,7 @@ import java.util.Map;
 
 public abstract class Tile {
     protected final int tileCoordinate;
-    private static final Map<Integer, EmptyTile> EMPTY_TILES_CACHE = createAllPossibleEmptyTiles();
+    private static final Map<Integer, EmptyTile> EMPTY_TILES_CACHE= createAllPossibleEmptyTiles();
     private static Map<Integer, EmptyTile> createAllPossibleEmptyTiles(){
         final Map<Integer, EmptyTile> emptyTileMap = new HashMap<>();
         for(int i = 0; i < 64; i++){
