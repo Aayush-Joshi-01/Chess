@@ -1,6 +1,7 @@
 package com.chess.engine.pieces;
 import com.chess.engine.Alliance;
 import com.chess.engine.board.Board;
+import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Tile;
 import com.google.common.collect.ImmutableList;
@@ -33,5 +34,8 @@ public class Knight extends Piece{
             }
         }
         return ImmutableList.copyOf(legalMoves);
+    }
+    private static boolean isFirstColumnExclusion(final int currentPosition, final int candidateOffset){
+        return BoardUtils.FIRST_COLUMN[currentPosition]&&((candidateOffset == -17) || (candidateOffset == -10) || (candidateOffset == 6) || (candidateOffset == 15));
     }
 }
