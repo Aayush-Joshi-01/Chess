@@ -76,4 +76,4 @@ This Java Chess project is licensed under the [MIT License](LICENSE). You are fr
 
 ---
 
-Enjoy playing chess against the Minimax AI bot! If you have any questions or encounter any issues, please don't hesitate to reach out or open an issue on the GitHub repository. Happy gaming!
+Enjoy playing chess against the Minimax AI bot! If you have any questions or encounter any issues, please don't hesitate to reach out or open an issue on the GitHub repository.
