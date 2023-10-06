@@ -3,6 +3,9 @@ import com.chess.engine.Alliance;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
+import com.chess.engine.board.Tile;
+import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,9 +20,23 @@ public class Bishop extends Piece{
         for(final int candidateCoordinateOffset : CANDIDATE_MOVE_VECTOR_COORDINATE){
             int candidateDestinationCoordinate = this.piecePosition;
             while(BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)){
-
+                candidateDestinationCoordinate += candidateCoordinateOffset;
+                if(BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)){
+                    final Tile candidateDestinationTile = board.getTile(candidateDestinationCoordinate);
+                    if (!candidateDestinationTile.isTileOccupied()){
+                        legalMoves.add(new Move.MajorMove(board, this, candidateDestinationCoordinate));
+                    }
+                    else{
+                        final Piece pieceAtDestination = candidateDestinationTile.getPiece(); //getting the pieces
+                        final Alliance pieceAlliance = pieceAtDestination.getPieceAlliance();
+                        if(this.pieceAlliance != pieceAlliance){   // if the piece is of enemy then we add that move as well to the set of legal moves.
+                            legalMoves.add(new Move.AttackMove(board, this, candidateDestinationCoordinate,pieceAtDestination));
+                        }
+                    }
+                    break;
+                }
             }
         }
-        return null;
+        return ImmutableList.copyOf(legalMoves);
     }
 }
