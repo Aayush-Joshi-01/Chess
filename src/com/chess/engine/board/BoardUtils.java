@@ -17,7 +17,7 @@ public class BoardUtils {
         }while(columnNumber < NUM_TILES);
         return column;
     }
-    private static boolean isValidTileCoordinate(int coordinate) {
+    public static boolean isValidTileCoordinate(int coordinate) {
         return coordinate >= 0 && coordinate < NUM_TILES;
     }
 }
