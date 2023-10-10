@@ -22,10 +22,10 @@ public class Knight extends Piece{
             final int candidateDestinationCoordinate;
             candidateDestinationCoordinate = this.piecePosition + currentCandidateOffset;
             if (BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)){
-                final Tile candidateDestinationTile = board.getTile(candidateDestinationCoordinate);
                 if(isFirstColumnExclusion(this.piecePosition,currentCandidateOffset) || isSecondColumnExclusion(this.piecePosition,currentCandidateOffset) || isSeventhColumnExclusion(this.piecePosition,currentCandidateOffset) || isEighthColumnExclusion(this.piecePosition,currentCandidateOffset)){
                     continue;
                 }
+                final Tile candidateDestinationTile = board.getTile(candidateDestinationCoordinate);
                 if (!candidateDestinationTile.isTileOccupied()){
                     legalMoves.add(new MajorMove(board, this, candidateDestinationCoordinate));
                 }

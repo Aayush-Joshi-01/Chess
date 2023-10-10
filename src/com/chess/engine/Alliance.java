@@ -5,12 +5,10 @@ public enum Alliance { // For Classifying two groups of pieces.
         public int getDirection() {
             return -1;
         }
-
         @Override
         public boolean isWhite() {
             return true;
         }
-
         @Override
         public boolean isBlack() {
             return false;
@@ -21,12 +19,10 @@ public enum Alliance { // For Classifying two groups of pieces.
         public int getDirection() {
             return 1;
         }
-
         @Override
         public boolean isWhite() {
             return false;
         }
-
         @Override
         public boolean isBlack() {
             return true;
