@@ -18,6 +18,9 @@ public class King extends Piece{
         final List<Move> legalMoves = new ArrayList<>();
         for(final int currentCandidateOffset : CANDIDATE_MOVE_COORDINATE){
             final int candidateDestinationCoordinate = this.piecePosition + currentCandidateOffset;
+            if(isFirstColumnExclusion(this.piecePosition, currentCandidateOffset) || isEighthColumnExclusion(this.piecePosition, currentCandidateOffset)){
+                continue;
+            }
             if(BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)){
                 final Tile candidateDestinationTile = board.getTile(candidateDestinationCoordinate);
                 if (!candidateDestinationTile.isTileOccupied()){
@@ -33,5 +36,11 @@ public class King extends Piece{
             }
         }
         return ImmutableList.copyOf(legalMoves);
+    }
+    private static boolean isFirstColumnExclusion(final int currentPosition, final int candidateOffset){
+        return BoardUtils.FIRST_COLUMN[currentPosition] && ((candidateOffset == -9) || (candidateOffset == -1) || (candidateOffset == 7));
+    }
+    private static boolean isEighthColumnExclusion(final int currentPosition,final int candidateOffset){
+        return BoardUtils.EIGHTH_COLUMN[currentPosition] && ((candidateOffset == -7) || (candidateOffset == 1) || (candidateOffset == 9));
     }
 }
