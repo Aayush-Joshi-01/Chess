@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 public class Knight extends Piece{
     private final static int[] CANDIDATE_MOVE_COORDINATES = {-17,-15,-10,-6,6,10,15,17}; // all the possible coordinates for a knight to move with respect to its current postion
-    Knight(int piecePosition, Alliance pieceAlliance) {
+    public Knight(Alliance pieceAlliance, final int piecePosition) {
         super(piecePosition, pieceAlliance);
     }
     @Override
