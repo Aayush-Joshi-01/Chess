@@ -27,7 +27,7 @@ public class Board {
         builder.setPiece(new Knight(Alliance.BLACK, 1));
         builder.setPiece(new Bishop(Alliance.BLACK, 2));
         builder.setPiece(new Queen(Alliance.BLACK, 3));
-        builder.setPiece(new King(Alliance.BLACK, 4));
+        builder.setPiece(new King(Alliance.BLACK, 4));// will add booleans after wards
         builder.setPiece(new Bishop(Alliance.BLACK, 5));
         builder.setPiece(new Knight(Alliance.BLACK, 6));
         builder.setPiece(new Rook(Alliance.BLACK, 7));
