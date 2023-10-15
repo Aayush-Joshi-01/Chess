@@ -15,9 +15,23 @@ public class Board {
         this.gameboard = createGameBoard(builder);
         this.whitePieces = calculateActivePieces(this.gameboard, Alliance.WHITE);
         this.blackPieces = calculateActivePieces(this.gameboard, Alliance.BLACK);
+        final Collection<Move> whiteStandardLegalMoves = calculatedLegalMoves(this.whitePieces);
+        final Collection<Move> blackStandardLegalMoves = calculatedLegalMoves(this.blackPieces);
     }
+    public String toString(){
+        final StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < BoardUtils.NUM_TILES; i++){
 
-    private Collection<Piece> calculateActivePieces(final List<Tile> gameboard, final Alliance alliance) {
+        }
+    }
+    private Collection<Move> calculatedLegalMoves(final Collection<Piece> pieces) {
+        final List<Move> legalMoves = new ArrayList<>();
+        for(final Piece piece : pieces ){
+            legalMoves.addAll(piece.calculatedLegalMoves(this));
+        }
+        return ImmutableList.copyOf(legalMoves);
+    }
+    private static Collection<Piece> calculateActivePieces(final List<Tile> gameboard, final Alliance alliance) {
         final List<Piece> activePieces = new ArrayList<>();
         for(final Tile tile : gameboard){
             if(tile.isTileOccupied()){
