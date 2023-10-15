@@ -23,6 +23,7 @@ public class Board {
         for(int i = 0; i < BoardUtils.NUM_TILES; i++){
 
         }
+        return null;
     }
     private Collection<Move> calculatedLegalMoves(final Collection<Piece> pieces) {
         final List<Move> legalMoves = new ArrayList<>();
