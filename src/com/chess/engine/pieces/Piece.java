@@ -23,4 +23,17 @@ public abstract class Piece {
     public int getPiecePosition() {
         return this.piecePosition;
     }
+    public enum PieceType{
+        PAWN("P"),
+        KNIGHT("N"),
+        BISHOP("B"),
+        ROOK("R"),
+        QUEEN("Q"),
+        KING("K");
+
+        private String pieceName;
+        PieceType(final String pieceName){
+            this.pieceName = pieceName;
+        }
+    }
 }

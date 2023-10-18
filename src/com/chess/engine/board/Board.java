@@ -3,27 +3,29 @@ import com.chess.engine.Alliance;
 import com.chess.engine.pieces.*;
 import com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 public class Board {
-    private final List<Tile> gameboard;
+    private final List<Tile> gameBoard;
     private final Collection<Piece> whitePieces;
     private final Collection<Piece> blackPieces;
     private Board(Builder builder){
-        this.gameboard = createGameBoard(builder);
-        this.whitePieces = calculateActivePieces(this.gameboard, Alliance.WHITE);
-        this.blackPieces = calculateActivePieces(this.gameboard, Alliance.BLACK);
+        this.gameBoard = createGameBoard(builder);
+        this.whitePieces = calculateActivePieces(this.gameBoard, Alliance.WHITE);
+        this.blackPieces = calculateActivePieces(this.gameBoard, Alliance.BLACK);
         final Collection<Move> whiteStandardLegalMoves = calculatedLegalMoves(this.whitePieces);
         final Collection<Move> blackStandardLegalMoves = calculatedLegalMoves(this.blackPieces);
     }
     public String toString(){
         final StringBuilder builder = new StringBuilder();
         for(int i = 0; i < BoardUtils.NUM_TILES; i++){
-
+            final String tileText = this.gameBoard.get(i).toString();
+            builder.append(String.format("%3s",tileText));
+            if((i+1) % BoardUtils.NUM_TILES_PER_ROW == 0){
+                builder.append("\n");
+            }
         }
-        return null;
+        return builder.toString();
     }
     private Collection<Move> calculatedLegalMoves(final Collection<Piece> pieces) {
         final List<Move> legalMoves = new ArrayList<>();
@@ -46,7 +48,7 @@ public class Board {
     }
 
     public Tile getTile(final int tileCoordinate){
-        return this.gameboard.get(tileCoordinate);
+        return this.gameBoard.get(tileCoordinate);
     }
     private static List<Tile> createGameBoard(final Builder builder) {
         final Tile[] tiles = new Tile[BoardUtils.NUM_TILES];
@@ -100,6 +102,7 @@ public class Board {
         Map<Integer, Piece> boardConfig;
         Alliance nextMoveMaker;
         public Builder(){
+            this.boardConfig = new HashMap<>();
         }
         public Builder setPiece(final Piece piece){
             this.boardConfig.put(piece.getPiecePosition(), piece);
