@@ -1,4 +1,5 @@
 package com.chess.engine.player;
+import com.chess.engine.Alliance;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 import com.chess.engine.pieces.King;
@@ -13,7 +14,6 @@ public abstract class Player {
         this.playerKing = establishKing();
         this.legalMoves = legalMoves;
     }
-
     private King establishKing() {
         for(final Piece piece : getActivePieces()){
             if(piece.getPieceType().isKing()){
@@ -22,6 +22,10 @@ public abstract class Player {
         }
         throw new RuntimeException("Not a Valid Board !!!");
     }
-
+    public boolean isMoveLegal(final Move move){
+        return this.legalMoves.contains(move);
+    }
     public abstract Collection<Piece> getActivePieces();
+    public abstract Alliance getAlliance();
+    public abstract Player getOpponent();
 }

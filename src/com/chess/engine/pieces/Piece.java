@@ -67,12 +67,10 @@ public abstract class Piece {
                 return true;
             }
         };
-
-        private String pieceName;
+        private final String pieceName;
         PieceType(final String pieceName){
             this.pieceName = pieceName;
         }
-
         public abstract boolean isKing();
     }
 }
