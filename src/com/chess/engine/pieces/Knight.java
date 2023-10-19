@@ -13,7 +13,7 @@ import java.util.List;
 public class Knight extends Piece{
     private final static int[] CANDIDATE_MOVE_COORDINATES = {-17,-15,-10,-6,6,10,15,17}; // all the possible coordinates for a knight to move with respect to its current postion
     public Knight(final Alliance pieceAlliance, final int piecePosition) {
-        super(piecePosition, pieceAlliance);
+        super(PieceType.KNIGHT, piecePosition, pieceAlliance);
     }
     @Override
     public Collection<Move> calculatedLegalMoves(final Board board) {

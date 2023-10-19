@@ -20,7 +20,7 @@ public abstract class Player {
                 return (King) piece;
             }
         }
-        return null;
+        throw new RuntimeException("Not a Valid Board !!!");
     }
 
     public abstract Collection<Piece> getActivePieces();
