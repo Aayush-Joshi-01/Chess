@@ -115,7 +115,6 @@ public class Board {
     public Player blackPlayer() {
         return this.blackPlayer;
     }
-
     public Player whitePlayer() {
         return this.whitePlayer;
     }
