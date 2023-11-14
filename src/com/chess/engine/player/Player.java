@@ -44,11 +44,13 @@ public abstract class Player {
     public boolean isInCheck() {
         return this.isInCheck;
     }
-    // TODO implementation of the methods below
+
     public boolean isInCheckMate() {
         return this.isInCheck && !hasEscapeMoves();
     }
-
+    public boolean isInStaleMate() {
+        return !this.isInCheck && !hasEscapeMoves();
+    }
     protected boolean hasEscapeMoves() {
         for( final Move move : this.legalMoves) {
             final MoveTransition transition = makeMove(move);
@@ -58,13 +60,16 @@ public abstract class Player {
         }
         return false;
     }
-    public boolean isInStaleMate() {
-        return false;
-    }
+    // TODO implementation of the methods below
     public boolean isCastled() {
         return false;
     }
     public MoveTransition makeMove(final Move move) {
+        if(!isMoveLegal(move)){
+            return new MoveTransition(this.board, move, MoveStatus.ILLEGAL_MOVE);
+        }
+        final Board transitionBoard = move.execute();
+        final Collection<Move> kingAttacks = Player.calculateAttacksOnTile(transitionBoard.currentPlayer().getOpponent().getPlayerKing().getPiecePosition(), transitionBoard.currentPlayer().getLegalMoves());
         return null;
     }
     public abstract Collection<Piece> getActivePieces();
