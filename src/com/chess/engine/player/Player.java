@@ -19,7 +19,9 @@ public abstract class Player {
         this.legalMoves = legalMoves;
         this.isInCheck = !Player.calculateAttacksOnTile(this.playerKing.getPiecePosition(), opponentMoves).isEmpty();
     }
-
+    public King getPlayerKing() {
+        return this.playerKing;
+    }
     private static Collection<Move> calculateAttacksOnTile(int piecePosition, Collection<Move> moves) {
         final List<Move> attackMoves = new ArrayList<>();
         for( final Move move : moves){
@@ -29,7 +31,6 @@ public abstract class Player {
         }
         return ImmutableList.copyOf(attackMoves);
     }
-
     private King establishKing() {
         for(final Piece piece : getActivePieces()){
             if(piece.getPieceType().isKing()){
@@ -70,8 +71,15 @@ public abstract class Player {
         }
         final Board transitionBoard = move.execute();
         final Collection<Move> kingAttacks = Player.calculateAttacksOnTile(transitionBoard.currentPlayer().getOpponent().getPlayerKing().getPiecePosition(), transitionBoard.currentPlayer().getLegalMoves());
-        return null;
+        if(!kingAttacks.isEmpty()) {
+            return new MoveTransition(this.board, move, MoveStatus.LEAVES_PLAYER_IN_CHECK);
+        }
+        return new MoveTransition(transitionBoard, move, MoveStatus.DONE);
     }
+    private Collection<Move> getLegalMoves() {
+        return this.legalMoves;
+    }
+
     public abstract Collection<Piece> getActivePieces();
     public abstract Alliance getAlliance();
     public abstract Player getOpponent();

@@ -25,6 +25,7 @@ public class Board {
         this.blackPlayer = new BlackPlayer(this, whiteStandardLegalMoves, blackStandardLegalMoves);
         this.currentPlayer = null;
     }
+    @Override
     public String toString(){
         final StringBuilder builder = new StringBuilder();
         for(int i = 0; i < BoardUtils.NUM_TILES; i++){
