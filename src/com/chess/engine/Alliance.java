@@ -1,5 +1,5 @@
 package com.chess.engine;
-public enum Alliance { // For Classifying two groups of pieces.
+public enum Alliance { // For Classifying two groups of pieces.cccc
     WHITE {
         @Override
         public int getDirection() {
