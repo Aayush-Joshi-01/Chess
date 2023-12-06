@@ -15,7 +15,9 @@ public abstract class Move {
     public int getDestinationCoordinate() {
         return this.destinationCoordinate;
     }
-
+    public Piece getMovedPiece(){
+        return this.movedPiece;
+    }
     public abstract Board execute();
 
     public static final class MajorMove extends Move{
@@ -29,6 +31,9 @@ public abstract class Move {
             the new board and updating the recent move that is a non-attacking move*/
             final Builder builder = new Builder();
             for(final Piece piece : this.board.currentPlayer().getActivePieces()){
+                /*
+                     TODO Hash Code and equals pieces
+                */
                 if(!this.movedPiece.equals(piece)){
                     builder.setPiece(piece);
                 }
@@ -36,7 +41,8 @@ public abstract class Move {
             for(final Piece piece : this.board.currentPlayer().getOpponent().getActivePieces()){
                 builder.setPiece(piece);
             }
-            builder.setMoveMaker(null);
+            // move the set piece
+            builder.setPiece(this.movedPiece.movePiece(this));
             builder.setMoveMaker(this.board.currentPlayer().getOpponent().getAlliance());
             return builder.build();
         }
