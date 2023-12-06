@@ -25,6 +25,8 @@ public abstract class Move {
 
         @Override
         public Board execute() {
+            /*Traversing through all the pieces on the board and copying their position on
+            the new board and updating the recent move that is a non-attacking move*/
             final Builder builder = new Builder();
             for(final Piece piece : this.board.currentPlayer().getActivePieces()){
                 if(!this.movedPiece.equals(piece)){
