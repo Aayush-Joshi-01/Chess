@@ -75,7 +75,9 @@ public class Board {
     }
     public static Board createStandardBoard(){
         final Builder builder = new Builder();
-        // Black Layout
+        /*
+        setting the inital piece layout for black
+        */
         builder.setPiece(new Rook(Alliance.BLACK, 0));
         builder.setPiece(new Knight(Alliance.BLACK, 1));
         builder.setPiece(new Bishop(Alliance.BLACK, 2));
@@ -92,7 +94,9 @@ public class Board {
         builder.setPiece(new Pawn(Alliance.BLACK, 13));
         builder.setPiece(new Pawn(Alliance.BLACK, 14));
         builder.setPiece(new Pawn(Alliance.BLACK, 15));
-        // White Layout
+        /*
+        setting the inital piece layout for white
+        */
         builder.setPiece(new Pawn(Alliance.WHITE, 48));
         builder.setPiece(new Pawn(Alliance.WHITE, 49));
         builder.setPiece(new Pawn(Alliance.WHITE, 50));
@@ -109,9 +113,9 @@ public class Board {
         builder.setPiece(new Bishop(Alliance.WHITE, 61));
         builder.setPiece(new Knight(Alliance.WHITE, 62));
         builder.setPiece(new Rook(Alliance.WHITE, 63));
-        //white to move
+        //setting the initial move to white.
         builder.setMoveMaker(Alliance.WHITE);
-        //build the board
+        //building th eboard for the first time.
         return builder.build();
     }
 
@@ -127,6 +131,9 @@ public class Board {
     }
 
     public static class Builder{
+        /*
+            Builder Class for building the board gets all the positions of the pieces and put them on the board.
+        */
         Map<Integer, Piece> boardConfig;
         Alliance nextMoveMaker;
         public Builder(){
