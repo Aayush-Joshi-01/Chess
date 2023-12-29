@@ -1,9 +1,7 @@
 package com.chess.engine;
-
 import com.chess.engine.player.BlackPlayer;
 import com.chess.engine.player.Player;
 import com.chess.engine.player.WhitePlayer;
-
 public enum Alliance { // For Classifying two groups of pieces.cccc
     WHITE {
         @Override
@@ -46,6 +44,5 @@ public enum Alliance { // For Classifying two groups of pieces.cccc
     public abstract int getDirection();
     public abstract boolean isWhite();
     public abstract boolean isBlack();
-
     public abstract Player choosePlayer(WhitePlayer whitePlayer, BlackPlayer blackPlayer);
 }

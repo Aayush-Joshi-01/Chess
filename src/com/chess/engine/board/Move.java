@@ -1,8 +1,6 @@
 package com.chess.engine.board;
 import com.chess.engine.pieces.Piece;
-
 import static com.chess.engine.board.Board.*;
-
 public abstract class Move {
     final Board board;
     final Piece movedPiece;
@@ -22,7 +20,6 @@ public abstract class Move {
     public Piece getMovedPiece(){
         return this.movedPiece;
     }
-
     public Board execute() {
         /*Traversing through all the pieces on the board and copying their position on
         the new board and updating the recent move that is a non-attacking move*/
@@ -43,7 +40,6 @@ public abstract class Move {
         builder.setMoveMaker(this.board.currentPlayer().getOpponent().getAlliance());
         return builder.build();
     }
-
     public static final class MajorMove extends Move{
         public MajorMove(final Board board, final Piece movedPiece, final int destinationCoordinate) {
             super(board, movedPiece, destinationCoordinate);

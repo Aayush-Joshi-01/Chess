@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import java.util.*;
-
 public class Board {
     private final List<Tile> gameBoard;
     private final Collection<Piece> whitePieces;
@@ -63,7 +62,6 @@ public class Board {
         }
         return ImmutableList.copyOf(activePieces);
     }
-
     public Tile getTile(final int tileCoordinate){
         return this.gameBoard.get(tileCoordinate);
     }
@@ -119,22 +117,18 @@ public class Board {
         //building th eboard for the first time.
         return builder.build();
     }
-
     public Player blackPlayer() {
         return this.blackPlayer;
     }
     public Player whitePlayer() {
         return this.whitePlayer;
     }
-
     public Player currentPlayer() {
         return this.currentPlayer;
     }
-
     public Iterable<Move> getAllLegalMoves() {
         return Iterables.unmodifiableIterable(Iterables.concat(this.whitePlayer.getLegalMoves(), this.blackPlayer.getLegalMoves()));
     }
-
     public static class Builder{
         /*
             Builder Class for building the board gets all the positions of the pieces and put them on the board.

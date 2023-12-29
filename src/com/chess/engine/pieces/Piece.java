@@ -17,7 +17,6 @@ public abstract class Piece {
         this.isFirstMove = false;
         this.cachedHashCode = computeHashCode();
     }
-
     private int computeHashCode() {
         int result = pieceType.hashCode();
         result = 31 * result + pieceAlliance.hashCode();
@@ -25,7 +24,6 @@ public abstract class Piece {
         result = 31 * result + (isFirstMove ? 1 : 0);
         return result;
     }
-
     @Override
     public boolean equals(final Object other){
         if(this == other){
