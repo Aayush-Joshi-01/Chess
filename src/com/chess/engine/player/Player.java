@@ -76,7 +76,7 @@ public abstract class Player {
         }
         return new MoveTransition(transitionBoard, move, MoveStatus.DONE);
     }
-    private Collection<Move> getLegalMoves() {
+    public Collection<Move> getLegalMoves() {
         return this.legalMoves;
     }
 
