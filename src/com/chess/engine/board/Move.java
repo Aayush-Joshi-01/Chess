@@ -49,12 +49,14 @@ public abstract class Move {
         return null;
     }
     public Board execute() {
-        /*Traversing through all the pieces on the board and copying their position on
-        the new board and updating the recent move that is a non-attacking move*/
+        /*
+            Traversing through all the pieces on the board and copying their position on
+            the new board and updating the recent move that is a non-attacking move
+        */
         final Builder builder = new Builder();
         for(final Piece piece : this.board.currentPlayer().getActivePieces()){
             /*
-                 TODO Hash Code and equals pieces
+                TODO Hash Code and equals piece
             */
             if(!this.movedPiece.equals(piece)){
                 builder.setPiece(piece);
@@ -63,7 +65,9 @@ public abstract class Move {
         for(final Piece piece : this.board.currentPlayer().getOpponent().getActivePieces()){
             builder.setPiece(piece);
         }
-        // move the set piece
+        /*
+            move the set piece
+        */
         builder.setPiece(this.movedPiece.movePiece(this));
         builder.setMoveMaker(this.board.currentPlayer().getOpponent().getAlliance());
         return builder.build();
@@ -84,6 +88,9 @@ public abstract class Move {
             return null;
         }
     }
+    /*
+        Functions for different special moves
+    */
     public static final class PawnMove extends Move{
         public PawnMove(final Board board, final Piece movedPiece, final int destinationCoordinate) {
             super(board, movedPiece, destinationCoordinate);
@@ -132,6 +139,9 @@ public abstract class Move {
         private MoveFactory(){
             throw new RuntimeException("Non instantiable");
         }
+        /*
+            Creating a Move, here we remake the whole board and if the move is executable print the piece on that new block.
+        */
         public static Move createMove(final Board board, final int currentCoordinate, final int destinationCoordinate){
             for(final Move move : board.getAllLegalMoves()){
                 if(move.getCurrentCoordinate() == currentCoordinate && move.getDestinationCoordinate() == destinationCoordinate){
