@@ -6,7 +6,6 @@ import com.chess.engine.player.Player;
 import com.chess.engine.player.WhitePlayer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.util.*;
 public class Board {
     private final List<Tile> gameBoard;
@@ -94,7 +93,7 @@ public class Board {
         builder.setPiece(new Pawn(Alliance.BLACK, 14));
         builder.setPiece(new Pawn(Alliance.BLACK, 15));
         /*
-        setting the inital piece layout for white
+            Setting the inital piece layout for white
         */
         builder.setPiece(new Pawn(Alliance.WHITE, 48));
         builder.setPiece(new Pawn(Alliance.WHITE, 49));
@@ -112,9 +111,9 @@ public class Board {
         builder.setPiece(new Bishop(Alliance.WHITE, 61));
         builder.setPiece(new Knight(Alliance.WHITE, 62));
         builder.setPiece(new Rook(Alliance.WHITE, 63));
-        //setting the initial move to white.
+        // setting the initial move to white.
         builder.setMoveMaker(Alliance.WHITE);
-        //building th eboard for the first time.
+        // building the board for the first time.
         return builder.build();
     }
     public Player blackPlayer() {

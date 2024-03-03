@@ -11,14 +11,14 @@ public abstract class Move {
         this.movedPiece = movedPiece;
         this.destinationCoordinate = destinationCoordinate;
     }
-    @Override
-    public int hasCode(){
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + this.destinationCoordinate;
-        result = prime * result + this.movedPiece.hashCode();
-        return result;
-    }
+//    @Override
+//    public int hasCode(){
+//        final int prime = 31;
+//        int result = 1;
+//        result = prime * result + this.destinationCoordinate;
+//        result = prime * result + this.movedPiece.hashCode();
+//        return result;
+//    }
     @Override
     public boolean equals(final Object other){
         if(this == other){
