@@ -20,7 +20,10 @@ public class Bishop extends Piece{
         for(final int candidateCoordinateOffset : CANDIDATE_MOVE_VECTOR_COORDINATE){
             int candidateDestinationCoordinate = this.piecePosition;
             while(BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)){
-                if(isFirstColumnExclusion(candidateDestinationCoordinate, candidateCoordinateOffset) || isEighthColumnExclusion(candidateDestinationCoordinate, candidateCoordinateOffset)){
+                if(
+                        isFirstColumnExclusion(candidateDestinationCoordinate, candidateCoordinateOffset) ||
+                                isEighthColumnExclusion(candidateDestinationCoordinate, candidateCoordinateOffset)
+                ) {
                     break;
                 }
                 candidateDestinationCoordinate += candidateCoordinateOffset;
@@ -30,10 +33,19 @@ public class Bishop extends Piece{
                         legalMoves.add(new MajorMove(board, this, candidateDestinationCoordinate));
                     }
                     else{
-                        final Piece pieceAtDestination = candidateDestinationTile.getPiece(); //getting the pieces
+                        final Piece pieceAtDestination = candidateDestinationTile.getPiece();
+                        //getting the pieces
                         final Alliance pieceAlliance = pieceAtDestination.getPieceAlliance();
-                        if(this.pieceAlliance != pieceAlliance){   // if the piece is of enemy then we add that move as well to the set of legal moves.
-                            legalMoves.add(new Move.AttackMove(board, this, candidateDestinationCoordinate,pieceAtDestination));
+                        if(this.pieceAlliance != pieceAlliance){
+                            // if the piece is of enemy then we add that move as well to the set of legal moves.
+                            legalMoves.add(
+                                    new Move.AttackMove(
+                                            board,
+                                            this,
+                                            candidateDestinationCoordinate,
+                                            pieceAtDestination
+                                    )
+                            );
                         }
                         break;
                     }

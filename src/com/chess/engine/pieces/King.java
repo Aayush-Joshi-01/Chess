@@ -18,7 +18,13 @@ public class King extends Piece{
         final List<Move> legalMoves = new ArrayList<>();
         for(final int currentCandidateOffset : CANDIDATE_MOVE_COORDINATE){
             final int candidateDestinationCoordinate = this.piecePosition + currentCandidateOffset;
-            if(isFirstColumnExclusion(this.piecePosition, currentCandidateOffset) || isEighthColumnExclusion(this.piecePosition, currentCandidateOffset)){
+            if(
+                    isFirstColumnExclusion(
+                            this.piecePosition, currentCandidateOffset
+                    ) || isEighthColumnExclusion(
+                            this.piecePosition, currentCandidateOffset
+                    )
+            ) {
                 continue;
             }
             if(BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)){
@@ -27,10 +33,19 @@ public class King extends Piece{
                     legalMoves.add(new Move.MajorMove(board, this, candidateDestinationCoordinate));
                 }
                 else{
-                    final Piece pieceAtDestination = candidateDestinationTile.getPiece(); //getting the pieces
+                    final Piece pieceAtDestination = candidateDestinationTile.getPiece();
+                    //getting the pieces
                     final Alliance pieceAlliance = pieceAtDestination.getPieceAlliance();
-                    if(this.pieceAlliance != pieceAlliance){   // if the piece is of enemy then we add that move as well to the set of legal moves.
-                        legalMoves.add(new Move.AttackMove(board, this, candidateDestinationCoordinate,pieceAtDestination));
+                    if(this.pieceAlliance != pieceAlliance){
+                        // if the piece is of enemy then we add that move as well to the set of legal moves.
+                        legalMoves.add(
+                                new Move.AttackMove(
+                                        board,
+                                        this,
+                                        candidateDestinationCoordinate,
+                                        pieceAtDestination
+                                )
+                        );
                     }
                 }
             }
@@ -48,9 +63,13 @@ public class King extends Piece{
         return PieceType.KING.toString();
     }
     private static boolean isFirstColumnExclusion(final int currentPosition, final int candidateOffset){
-        return BoardUtils.FIRST_COLUMN[currentPosition] && ((candidateOffset == -9) || (candidateOffset == -1) || (candidateOffset == 7));
+        return BoardUtils.FIRST_COLUMN[currentPosition] && (
+                (candidateOffset == -9) || (candidateOffset == -1) || (candidateOffset == 7)
+        );
     }
     private static boolean isEighthColumnExclusion(final int currentPosition,final int candidateOffset){
-        return BoardUtils.EIGHTH_COLUMN[currentPosition] && ((candidateOffset == -7) || (candidateOffset == 1) || (candidateOffset == 9));
+        return BoardUtils.EIGHTH_COLUMN[currentPosition] && (
+                (candidateOffset == -7) || (candidateOffset == 1) || (candidateOffset == 9)
+        );
     }
 }
