@@ -3,6 +3,7 @@ import com.chess.engine.pieces.Piece;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
+
 public abstract class Tile {
     protected final int tileCoordinate;
     private static final Map<Integer, EmptyTile> EMPTY_TILES_CACHE= createAllPossibleEmptyTiles();

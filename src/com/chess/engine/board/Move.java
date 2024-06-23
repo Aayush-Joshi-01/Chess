@@ -1,6 +1,7 @@
 package com.chess.engine.board;
 import com.chess.engine.pieces.Piece;
 import static com.chess.engine.board.Board.*;
+
 public abstract class Move {
     final Board board;
     final Piece movedPiece;
@@ -73,13 +74,22 @@ public abstract class Move {
         return builder.build();
     }
     public static final class MajorMove extends Move{
-        public MajorMove(final Board board, final Piece movedPiece, final int destinationCoordinate) {
+        public MajorMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate
+        ) {
             super(board, movedPiece, destinationCoordinate);
         }
     }
     public static class AttackMove extends Move{
         final Piece attackedPiece;
-        public AttackMove(final Board board, final Piece movedPiece, final int destinationCoordinate, final Piece attackedPiece) {
+        public AttackMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate,
+                final Piece attackedPiece
+        ) {
             super(board, movedPiece, destinationCoordinate);
             this.attackedPiece = attackedPiece;
         }
@@ -92,37 +102,67 @@ public abstract class Move {
         Functions for different special moves
     */
     public static final class PawnMove extends Move{
-        public PawnMove(final Board board, final Piece movedPiece, final int destinationCoordinate) {
+        public PawnMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate
+        ) {
             super(board, movedPiece, destinationCoordinate);
         }
     }
     public static class PawnAttackMove extends AttackMove {
-        public PawnAttackMove(final Board board, final Piece movedPiece, final int destinationCoordinate, final Piece attackedPiece) {
+        public PawnAttackMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate,
+                final Piece attackedPiece
+        ) {
             super(board, movedPiece, destinationCoordinate, attackedPiece);
         }
     }
     public static final class PawnEnPassantAttackMove extends PawnAttackMove {
-        public PawnEnPassantAttackMove(final Board board, final Piece movedPiece, final int destinationCoordinate, final Piece attackedPiece) {
+        public PawnEnPassantAttackMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate,
+                final Piece attackedPiece
+        ) {
             super(board, movedPiece, destinationCoordinate, attackedPiece);
         }
     }
     public static final class PawnJump extends Move{
-        private PawnJump(final Board board, final Piece movedPiece, final int destinationCoordinate) {
+        private PawnJump(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate
+        ) {
             super(board, movedPiece, destinationCoordinate);
         }
     }
     public static abstract class CastleMove extends Move{
-        public CastleMove(final Board board, final Piece movedPiece, final int destinationCoordinate) {
+        public CastleMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate
+        ) {
             super(board, movedPiece, destinationCoordinate);
         }
     }
     public static final class KingSideCastleMove extends Move{
-        private KingSideCastleMove(final Board board, final Piece movedPiece, final int destinationCoordinate) {
+        private KingSideCastleMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate
+        ) {
             super(board, movedPiece, destinationCoordinate);
         }
     }
     public static final class QueenSideCastleMove extends Move{
-        private QueenSideCastleMove(final Board board, final Piece movedPiece, final int destinationCoordinate) {
+        private QueenSideCastleMove(
+                final Board board,
+                final Piece movedPiece,
+                final int destinationCoordinate
+        ) {
             super(board, movedPiece, destinationCoordinate);
         }
     }
@@ -142,9 +182,15 @@ public abstract class Move {
         /*
             Creating a Move, here we remake the whole board and if the move is executable print the piece on that new block.
         */
-        public static Move createMove(final Board board, final int currentCoordinate, final int destinationCoordinate){
+        public static Move createMove(
+                final Board board,
+                final int currentCoordinate,
+                final int destinationCoordinate
+        ) {
             for(final Move move : board.getAllLegalMoves()){
-                if(move.getCurrentCoordinate() == currentCoordinate && move.getDestinationCoordinate() == destinationCoordinate){
+                if(move.getCurrentCoordinate() == currentCoordinate
+                        &&
+                        move.getDestinationCoordinate() == destinationCoordinate){
                     return move;
                 }
             }

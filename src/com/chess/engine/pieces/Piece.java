@@ -33,7 +33,13 @@ public abstract class Piece {
             return false;
         }
         final Piece otherPiece = (Piece) other;
-        return piecePosition == otherPiece.getPiecePosition() && pieceType == otherPiece.getPieceType() && pieceAlliance == otherPiece.getPieceAlliance() && isFirstMove == otherPiece.isFirstMove();
+        return piecePosition == otherPiece.getPiecePosition()
+                &&
+                pieceType == otherPiece.getPieceType()
+                &&
+                pieceAlliance == otherPiece.getPieceAlliance()
+                &&
+                isFirstMove == otherPiece.isFirstMove();
     }
     @Override
     public int hashCode(){

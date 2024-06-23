@@ -7,6 +7,7 @@ import com.chess.engine.player.WhitePlayer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.util.*;
+
 public class Board {
     private final List<Tile> gameBoard;
     private final Collection<Piece> whitePieces;
@@ -126,7 +127,12 @@ public class Board {
         return this.currentPlayer;
     }
     public Iterable<Move> getAllLegalMoves() {
-        return Iterables.unmodifiableIterable(Iterables.concat(this.whitePlayer.getLegalMoves(), this.blackPlayer.getLegalMoves()));
+        return Iterables.unmodifiableIterable(
+                Iterables.concat(
+                        this.whitePlayer.getLegalMoves(),
+                        this.blackPlayer.getLegalMoves()
+                )
+        );
     }
     public static class Builder{
         /*
