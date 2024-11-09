@@ -75,7 +75,7 @@ public class Board {
     public static Board createStandardBoard(){
         final Builder builder = new Builder();
         /*
-        setting the inital piece layout for black
+        setting the initial piece layout for black
         */
         builder.setPiece(new Rook(Alliance.BLACK, 0));
         builder.setPiece(new Knight(Alliance.BLACK, 1));
@@ -94,7 +94,7 @@ public class Board {
         builder.setPiece(new Pawn(Alliance.BLACK, 14));
         builder.setPiece(new Pawn(Alliance.BLACK, 15));
         /*
-            Setting the inital piece layout for white
+            Setting the initial piece layout for white
         */
         builder.setPiece(new Pawn(Alliance.WHITE, 48));
         builder.setPiece(new Pawn(Alliance.WHITE, 49));
