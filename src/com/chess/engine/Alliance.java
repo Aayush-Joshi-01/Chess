@@ -6,18 +6,13 @@ import com.chess.engine.player.WhitePlayer;
 public enum Alliance { // For Classifying two groups of pieces.cccc
     WHITE {
         @Override
-        public int getDirection() {
-            return -1;
-        }
+        public int getDirection() { return -1; }
         @Override
-        public boolean isWhite() {
-            return true;
-        }
+        public int getOppositeDirection() { return 1; }
         @Override
-        public boolean isBlack() {
-            return false;
-        }
-
+        public boolean isWhite() { return true; }
+        @Override
+        public boolean isBlack() { return false; }
         @Override
         public Player choosePlayer(final WhitePlayer whitePlayer, final BlackPlayer blackPlayer) {
             return whitePlayer;
@@ -25,24 +20,20 @@ public enum Alliance { // For Classifying two groups of pieces.cccc
     },
     BLACK {
         @Override
-        public int getDirection() {
-            return 1;
-        }
+        public int getDirection() { return 1; }
         @Override
-        public boolean isWhite() {
-            return false;
-        }
+        public int getOppositeDirection() { return -1; }
         @Override
-        public boolean isBlack() {
-            return true;
-        }
-
+        public boolean isWhite() { return false; }
+        @Override
+        public boolean isBlack() { return true; }
         @Override
         public Player choosePlayer(final WhitePlayer whitePlayer, final BlackPlayer blackPlayer) {
             return blackPlayer;
         }
     };
     public abstract int getDirection();
+    public abstract int getOppositeDirection();
     public abstract boolean isWhite();
     public abstract boolean isBlack();
     public abstract Player choosePlayer(WhitePlayer whitePlayer, BlackPlayer blackPlayer);
