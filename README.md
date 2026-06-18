@@ -1,79 +1,192 @@
-# Java Chess with Minimax AI Bot
+# Chess
 
-Welcome to the Java Chess project with a Minimax AI bot! This project allows you to play chess against a computer opponent that uses the Minimax algorithm to make strategic decisions. You can test your chess skills and challenge yourself against this intelligent opponent.
-
-![Chess](https://betacssjs.chesscomfiles.com/bundles/web/images/offline-play/standardboard.png)
-
-## Table of Contents
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [How to Play](#how-to-play)
-- [Minimax Algorithm](#minimax-algorithm)
-- [AI Bot](#ai-bot)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Prerequisites
-Before you get started, make sure you have the following prerequisites installed:
-
-- Java Development Kit (JDK) 8 or higher
-- Git (optional, for cloning the repository)
-
-## Installation
-1. Clone this repository (if you haven't already):
-
-   ```bash
-   git clone https://github.com/Aayush-Joshi-01/Chess.git
-   ```
-
-2. Compile the Java source files:
-
-   ```bash
-   javac src/*.java
-   ```
-
-## How to Play
-1. Run the game:
-
-   ```bash
-   java -cp src Main
-   ```
-
-2. The game will display the chessboard and prompt you to enter moves in the format `source_square destination_square`. For example, to move a pawn from e2 to e4, you would enter `e2 e4`.
-
-3. Play your moves, and the AI bot will respond with its moves based on the Minimax algorithm.
-
-4. Keep playing until there is a checkmate, stalemate, or you decide to quit.
-
-## Minimax Algorithm
-The Minimax algorithm is a decision-making algorithm used in two-player games like chess. It is a recursive algorithm that evaluates possible moves to find the best move for the current player while assuming the opponent will make the worst move possible. The algorithm explores the game tree by recursively analyzing possible moves and their outcomes, and it assigns a score to each possible move.
-
-Here's a high-level overview of how the Minimax algorithm works:
-
-1. The AI bot considers all possible moves it can make.
-2. For each possible move, it simulates the game to a certain depth (controlled by the `depth` parameter) by making hypothetical moves for both players.
-3. It evaluates the resulting game state and assigns a score to that move.
-4. If the AI is the maximizing player, it chooses the move with the highest score (best for itself).
-5. If the AI is the minimizing player, it chooses the move with the lowest score (worst for the opponent).
-
-By recursively applying this process, the AI bot can determine the best move to make based on the current game state and the predicted future game states.
-
-You can customize the AI's difficulty by adjusting the depth of the Minimax algorithm in the `AIPlayer.java` file.
-
-```java
-// Set the depth for the Minimax algorithm
-int depth = 3; // Change this value to increase/decrease difficulty
-```
-
-## AI Bot
-The AI bot in this chess game uses the Minimax algorithm to make decisions, as explained above. It evaluates possible moves, predicts future game states, and selects the best move accordingly. Challenge yourself by playing against this intelligent opponent!
-
-## Contributing
-If you'd like to contribute to this project, feel free to open issues, submit pull requests, or suggest improvements. We welcome your ideas and contributions to make this chess game even better!
-
-## License
-This Java Chess project is licensed under the [MIT License](LICENSE). You are free to use, modify, and distribute this software as long as you include the original copyright notice and disclaimer.
+A complete Java chess application with a polished animated Swing GUI, full rule enforcement, and six progressively stronger AI difficulty levels.
 
 ---
 
-Enjoy playing chess against the Minimax AI bot! If you have any questions or encounter any issues, please don't hesitate to reach out or open an issue on the GitHub repository.
+## Features
+
+- Full chess rule enforcement (castling, en passant, pawn promotion, check, checkmate, stalemate)
+- Drag-and-drop or click-to-click piece movement with smooth animations
+- 6 AI difficulty levels using distinct real-world chess engine algorithms
+- Opening book covering 10+ common chess openings
+- Move history panel with Standard Algebraic Notation (SAN)
+- Captured pieces panel with material advantage display
+- Board flip (play from Black's perspective)
+- Undo move (Ctrl+Z), New Game (Ctrl+N), Flip Board (F)
+- Unicode piece rendering with optional PNG piece image support
+
+---
+
+## Module Overview
+
+```
+src/com/chess/
+├── engine/
+│   ├── Alliance.java              — WHITE/BLACK enum with direction helpers
+│   ├── Chessv2.java               — Application entry point
+│   ├── board/
+│   │   ├── Board.java             — Immutable board state (Builder pattern)
+│   │   ├── BoardUtils.java        — Column/row arrays, coordinate helpers, SAN
+│   │   ├── Move.java              — Move hierarchy (MajorMove, AttackMove, Castle, Pawn variants)
+│   │   └── Tile.java              — EmptyTile / OccupiedTile
+│   ├── pieces/
+│   │   ├── Piece.java             — Abstract base (PieceType enum with material values)
+│   │   ├── Pawn.java              — Pawn with en passant and promotion
+│   │   ├── Knight.java
+│   │   ├── Bishop.java
+│   │   ├── Rook.java
+│   │   ├── Queen.java
+│   │   └── King.java
+│   └── player/
+│       ├── Player.java            — Abstract player (check/checkmate/stalemate detection)
+│       ├── WhitePlayer.java       — Castling logic for White
+│       ├── BlackPlayer.java       — Castling logic for Black
+│       ├── MoveStatus.java        — DONE / ILLEGAL_MOVE / LEAVES_PLAYER_IN_CHECK
+│       ├── MoveTransition.java    — Result of makeMove()
+│       └── ai/
+│           ├── BoardEvaluator.java             — Evaluation interface
+│           ├── StandardBoardEvaluator.java     — PST + material + structure
+│           ├── MoveOrdering.java               — MVV-LVA, killer moves, history heuristic
+│           ├── ZobristHasher.java              — 64-bit Zobrist hashing
+│           ├── TranspositionTable.java         — Fixed-size TT (1M entries)
+│           ├── OpeningBook.java                — Common opening repertoire
+│           ├── AIThinkTank.java                — SwingWorker wrapper
+│           ├── MoveStrategy.java               — Strategy interface
+│           ├── RandomMoveStrategy.java         — Level 1 — Random
+│           ├── GreedyStrategy.java             — Level 2 — Greedy (depth 1)
+│           ├── MiniMaxStrategy.java            — Level 3 — MiniMax (depth 3)
+│           ├── AlphaBetaStrategy.java          — Level 4 — Alpha-Beta (depth 4)
+│           ├── IterativeDeepeningStrategy.java — Level 5 — ID + TT (2s budget)
+│           └── AdvancedAlphaBetaStrategy.java  — Level 6 — Full engine
+└── gui/
+    ├── Table.java             — Main JFrame singleton, game loop
+    ├── BoardPanel.java        — 8×8 grid with drag-and-drop and animations
+    ├── TilePanel.java         — Individual tile: rendering + legal move dots
+    ├── GameHistoryPanel.java  — SAN move log (scrollable table)
+    ├── TakenPiecesPanel.java  — Captured pieces + material advantage
+    ├── GameSetup.java         — New game dialog (human/AI, difficulty)
+    └── art/                   — Optional PNG piece images (white_king.png, etc.)
+```
+
+---
+
+## Chess Rules Implemented
+
+| Rule | Status |
+|------|--------|
+| Basic piece movement (all 6 pieces) | ✅ |
+| Pawn single advance | ✅ |
+| Pawn double advance from starting rank | ✅ |
+| Pawn diagonal capture | ✅ |
+| En passant | ✅ |
+| Pawn promotion (Q/R/B/N choice in GUI, Q for AI) | ✅ |
+| Kingside castling | ✅ |
+| Queenside castling | ✅ |
+| Cannot castle through check or while in check | ✅ |
+| Check detection | ✅ |
+| Checkmate detection | ✅ |
+| Stalemate detection | ✅ |
+| Cannot move into check | ✅ |
+
+---
+
+## AI Difficulty Levels
+
+### Level 1 — Beginner (Random)
+Picks a uniformly random legal move. No evaluation.
+
+### Level 2 — Novice (Greedy)
+Evaluates all legal moves at depth 1 and picks the best immediate score. No lookahead.
+
+### Level 3 — Intermediate (MiniMax)
+Classic minimax algorithm without pruning, fixed depth 3. Explores all possible game trees separately for MAX and MIN players.
+
+### Level 4 — Advanced (Alpha-Beta)
+Negamax with alpha-beta pruning at depth 4. Prunes branches that cannot affect the final result, enabling much deeper search. Includes MVV-LVA move ordering for better pruning efficiency.
+
+### Level 5 — Expert (Iterative Deepening + Transposition Table)
+Searches increasing depths (1, 2, 3…) within a 2-second time budget. Uses:
+- **Zobrist hashing** for fast board fingerprinting
+- **Transposition table** (1M entry hash table) to avoid re-searching identical positions
+- **Aspiration windows** (±50cp) to narrow the search window
+- **Killer move heuristic** and **history heuristic** for move ordering
+
+### Level 6 — Master (Full Engine)
+All Level 5 techniques plus:
+- **Null-move pruning**: detects when skipping a move still exceeds beta (R=2 reduction)
+- **Late Move Reduction (LMR)**: reduces depth for quiet moves ordered late in the list
+- **Quiescence search**: extends search for captures/promotions at leaf nodes to avoid the horizon effect
+- **Futility pruning**: skips moves near the horizon when the static eval cannot reach alpha
+- **Delta pruning**: inside quiescence, skips captures that cannot improve alpha
+
+---
+
+## Opening Book
+
+The opening book covers these systems (from either side):
+
+| Opening | Variation |
+|---------|-----------|
+| 1. e4 e5 | Ruy Lopez (Bb5), Italian Game (Bc4) |
+| 1. e4 c5 | Sicilian Defense (Nc3, d4) |
+| 1. e4 e6 | French Defense (d4, Nc3) |
+| 1. e4 d5 | Scandinavian Defense |
+| 1. e4 c6 | Caro-Kann Defense |
+| 1. d4 d5 c4 | Queen's Gambit Accepted / Declined |
+| 1. d4 Nf6 c4 | King's Indian Defense |
+| 1. d4 Nf6 Bf4 | London System |
+| 1. e4 e5 f4 | King's Gambit |
+
+The book is active for the first 10 moves (20 half-moves), then the current difficulty engine takes over.
+
+---
+
+## Evaluation Function (`StandardBoardEvaluator`)
+
+Scores positions from White's perspective:
+
+| Component | Description |
+|-----------|-------------|
+| Material | Pawn=100, Knight=320, Bishop=330, Rook=500, Queen=900 |
+| Piece-Square Tables | Positional bonuses/penalties for each piece on each square |
+| Mobility | legal move count × 5 centipawns |
+| Check bonus | +50 if opponent is in check |
+| Checkmate | +10000 + depth (prefers faster mates) |
+| Doubled pawns | −30 per doubled pawn file |
+| Isolated pawns | −20 per isolated pawn |
+| Rook on open file | +25; half-open file: +10 |
+
+Score = whiteScore − blackScore. Negated for Black's turn in negamax.
+
+---
+
+## Architecture
+
+```
+  Chessv2 (main)
+      │ SwingUtilities.invokeLater
+      ▼
+  Table (JFrame singleton)
+  ├── BoardPanel (8×8 grid)
+  │   └── TilePanel ×64 (renders piece, highlights, legal dots)
+  ├── GameHistoryPanel (SAN move log)
+  └── TakenPiecesPanel (captures + advantage)
+
+  Human click → BoardPanel → MoveFactory.createMove()
+             → Player.makeMove() → MoveTransition (DONE)
+             → Table notifies TableGameAIWatcher (Observer)
+             → AIThinkTank (SwingWorker)
+             → MoveStrategy.execute(board)
+             → AI move applied → GUI redrawn
+```
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| Ctrl+N | New Game |
+| Ctrl+Z | Undo Move |
+| F | Flip Board |

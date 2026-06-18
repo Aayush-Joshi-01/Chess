@@ -9,9 +9,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 public class King extends Piece{
-    private final static int[] CANDIDATE_MOVE_COORDINATE = {-9, -8 -7, -1, 1, 7, 8, 9};
+    private final static int[] CANDIDATE_MOVE_COORDINATE = {-9, -8, -7, -1, 1, 7, 8, 9};
     public King(final Alliance pieceAlliance, final int piecePosition) {
-        super(PieceType.KING, piecePosition, pieceAlliance);
+        super(PieceType.KING, piecePosition, pieceAlliance, true);
+    }
+    public King(final Alliance pieceAlliance, final int piecePosition, final boolean isFirstMove) {
+        super(PieceType.KING, piecePosition, pieceAlliance, isFirstMove);
     }
     @Override
     public Collection<Move> calculatedLegalMoves(Board board) {
@@ -19,11 +22,8 @@ public class King extends Piece{
         for(final int currentCandidateOffset : CANDIDATE_MOVE_COORDINATE){
             final int candidateDestinationCoordinate = this.piecePosition + currentCandidateOffset;
             if(
-                    isFirstColumnExclusion(
-                            this.piecePosition, currentCandidateOffset
-                    ) || isEighthColumnExclusion(
-                            this.piecePosition, currentCandidateOffset
-                    )
+                    isFirstColumnExclusion(this.piecePosition, currentCandidateOffset) ||
+                    isEighthColumnExclusion(this.piecePosition, currentCandidateOffset)
             ) {
                 continue;
             }
@@ -31,21 +31,11 @@ public class King extends Piece{
                 final Tile candidateDestinationTile = board.getTile(candidateDestinationCoordinate);
                 if (!candidateDestinationTile.isTileOccupied()){
                     legalMoves.add(new Move.MajorMove(board, this, candidateDestinationCoordinate));
-                }
-                else{
+                } else {
                     final Piece pieceAtDestination = candidateDestinationTile.getPiece();
-                    //getting the pieces
                     final Alliance pieceAlliance = pieceAtDestination.getPieceAlliance();
                     if(this.pieceAlliance != pieceAlliance){
-                        // if the piece is of enemy then we add that move as well to the set of legal moves.
-                        legalMoves.add(
-                                new Move.AttackMove(
-                                        board,
-                                        this,
-                                        candidateDestinationCoordinate,
-                                        pieceAtDestination
-                                )
-                        );
+                        legalMoves.add(new Move.AttackMove(board, this, candidateDestinationCoordinate, pieceAtDestination));
                     }
                 }
             }
@@ -55,7 +45,7 @@ public class King extends Piece{
 
     @Override
     public King movePiece(Move move) {
-        return new King(move.getMovedPiece().pieceAlliance, move.getDestinationCoordinate());
+        return new King(move.getMovedPiece().pieceAlliance, move.getDestinationCoordinate(), false);
     }
 
     @Override
@@ -64,12 +54,12 @@ public class King extends Piece{
     }
     private static boolean isFirstColumnExclusion(final int currentPosition, final int candidateOffset){
         return BoardUtils.FIRST_COLUMN[currentPosition] && (
-                (candidateOffset == -9) || (candidateOffset == -1) || (candidateOffset == 7)
+                candidateOffset == -9 || candidateOffset == -1 || candidateOffset == 7
         );
     }
-    private static boolean isEighthColumnExclusion(final int currentPosition,final int candidateOffset){
+    private static boolean isEighthColumnExclusion(final int currentPosition, final int candidateOffset){
         return BoardUtils.EIGHTH_COLUMN[currentPosition] && (
-                (candidateOffset == -7) || (candidateOffset == 1) || (candidateOffset == 9)
+                candidateOffset == -7 || candidateOffset == 1 || candidateOffset == 9
         );
     }
 }
