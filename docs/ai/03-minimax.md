@@ -13,23 +13,54 @@ MiniMax is the foundational algorithm of game-tree search. It models chess as a 
 
 ---
 
-## The Game Tree
-
-At depth 3 with an average branching factor of 30:
+## The Game Tree (Depth 3)
 
 ```
-                     Root (White to move)
-                    /        |        \
-               move1       move2    ... ~30 moves
-              /  | \       /  | \
-           r1   r2  ...  r1  r2  ...   (Black replies, ~30 each)
-          / \             / \
-        w1  w2 ...      w1  w2 ...     (White replies, ~30 each)
-        ↑   ↑             ↑   ↑
-    leaf nodes — evaluated here (~27,000 positions)
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        MINIMAX SEARCH TREE                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+  Depth 0  ┌──────────────────────┐
+  (Root)   │  Current Position    │  ← White to move: MAXIMISE
+           │  score = ?           │
+           └──────────────────────┘
+                ╱         ╲
+               ╱           ╲
+  Depth 1  [move A]      [move B]         ← White's moves
+           score=?        score=?            (pick MAX)
+              │                │
+         ┌────┴────┐      ┌────┴────┐
+  Depth 2 │  │     │      │  │     │      ← Black replies
+         [r1][r2][r3]    [r1][r2][r3]        (pick MIN)
+          │              │
+  Depth 3 ├──┬──┐        ├──┬──┐           ← White replies
+         [w1][w2][w3]   [w1][w2][w3]           EVALUATE HERE
+          ↑   ↑   ↑
+        leaf nodes: call StandardBoardEvaluator
+
+  Back-propagate:
+    MIN nodes take the SMALLEST score from their children
+    MAX nodes take the LARGEST score from their children
 ```
 
-Total nodes evaluated: ≈ 30³ = 27,000 (before move legality filtering).
+---
+
+## Back-Propagation Example
+
+```
+  Depth 3 (leaves, evaluated):
+                  +50   +20   -30   +80   +10   +40
+                   │     │     │     │     │     │
+  Depth 2 (MIN): ┌─────────────┐   ┌─────────────┐
+                 │  min = -30  │   │  min = +10  │
+                 └─────────────┘   └─────────────┘
+                        │                 │
+  Depth 1 (MAX):   ┌────────────────────────┐
+                   │     max = max(-30, +10) = +10    │
+                   └────────────────────────┘
+                                │
+  Depth 0 (root):    pick the move that led to +10
+```
 
 ---
 
@@ -75,14 +106,42 @@ function MiniMaxMove(board):
     return bestMove
 ```
 
-### Key Properties
+---
 
-| Property | Value |
-|---|---|
-| **Complete** | Yes — always finds a move if one exists |
-| **Optimal** | Yes — optimal against a perfect opponent, given enough depth |
-| **Complexity** | O(b^d) time, O(d) space (b=branching factor, d=depth) |
-| **No pruning** | Explores every node — purely illustrative at this depth |
+## Node Count at Each Depth
+
+```
+  Average branching factor ≈ 30 legal moves per position
+
+  Depth │ Nodes to evaluate │ Time (approx)
+  ──────┼───────────────────┼──────────────
+    1   │               30  │   < 1 ms
+    2   │              900  │   < 1 ms
+    3   │           27,000  │  50–200 ms     ← Level 3 searches here
+    4   │          810,000  │    1–5 s       ← too slow without pruning
+    5   │       24,300,000  │   30–90 s      ← impractical
+    6   │      729,000,000  │   hours        ← never finishes
+
+  Alpha-Beta (Level 4) at the same depth explores only ~b^(d/2) nodes:
+    depth 4 with pruning ≈ 30^2 = ~900 nodes  (vs 810,000 raw)
+```
+
+---
+
+## Key Properties
+
+```
+  ┌────────────────────────────────────────────────────────────┐
+  │  Property         │ Value                                  │
+  │  ─────────────────┼──────────────────────────────────────  │
+  │  Complete         │ Yes — always finds a move if one exists│
+  │  Optimal          │ Yes — optimal vs a perfect opponent    │
+  │                   │       given sufficient depth           │
+  │  Time complexity  │ O(b^d)   b=branching, d=depth         │
+  │  Space complexity │ O(d)     just the call stack           │
+  │  Pruning          │ None — every node explored             │
+  └────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -100,6 +159,21 @@ Returns `true` if the current player is in checkmate or stalemate. At these term
 
 ### Why separate MAX and MIN instead of negamax?
 Pure educational value. The negamax formulation (used in Levels 4–6) collapses the two functions into one by negating the score on alternation, but is harder to read. MiniMax at Level 3 deliberately keeps the explicit asymmetry so the code mirrors the textbook algorithm exactly.
+
+---
+
+## Minimax vs Greedy: What Changes
+
+```
+  GREEDY (Level 2)                     MINIMAX (Level 3)
+  ─────────────────────────────────────────────────────────────
+  1-ply: scores own move only    │   3-ply: scores after White,
+                                 │   Black, White reply chains
+  Can't see opponent response    │   Models opponent as optimal
+  Walks into 1-move traps        │   Avoids 2-move tactics
+  ~400 Elo                       │   ~700 Elo
+  < 5 ms                         │   50–2000 ms
+```
 
 ---
 
