@@ -58,6 +58,72 @@ The `evaluate()` call returns `whiteScore - blackScore`. For white, we use this 
 
 ---
 
+## Java Implementation
+
+```java
+// GreedyStrategy.java
+public final class GreedyStrategy implements MoveStrategy {
+
+    private static final BoardEvaluator EVALUATOR = new StandardBoardEvaluator();
+
+    @Override
+    public Move execute(final Board board) {
+        Move bestMove  = Move.NULL_MOVE;
+        int  bestScore = Integer.MIN_VALUE;
+
+        for (final Move move : board.currentPlayer().getLegalMoves()) {
+            final MoveTransition transition =
+                    board.currentPlayer().makeMove(move);
+
+            // Only consider moves that don't leave us in check
+            if (transition.getMoveStatus().isDone()) {
+                // Negate for black so positive always means "I'm winning"
+                final int currentValue =
+                        board.currentPlayer().getAlliance().isWhite()
+                        ? EVALUATOR.evaluate(transition.getTransitionBoard(), 0)
+                        : -EVALUATOR.evaluate(transition.getTransitionBoard(), 0);
+
+                if (currentValue > bestScore) {
+                    bestScore = currentValue;
+                    bestMove  = move;
+                }
+            }
+        }
+        return bestMove;
+    }
+
+    @Override
+    public String getStrategyName() { return "Greedy"; }
+}
+```
+
+### Sequence Diagram: Greedy Move Execution
+
+```
+  AIThinkTank        GreedyStrategy      Board/Player      StandardBoardEvaluator
+       │                   │                  │                      │
+       │─ execute(board) ─►│                  │                      │
+       │                   │─ getLegalMoves()►│                      │
+       │                   │◄─ List<Move> ────│                      │
+       │                   │                  │                      │
+       │                   │  ┌─ for each move in list ────────┐     │
+       │                   │  │                                │     │
+       │                   │  │─ makeMove(move) ──────────────►│     │
+       │                   │  │◄─ MoveTransition ──────────────│     │
+       │                   │  │                                │     │
+       │                   │  │  if status == DONE:            │     │
+       │                   │  │─ evaluate(transitionBoard) ─────────►│
+       │                   │  │◄─ int score ───────────────────────── │
+       │                   │  │                                │     │
+       │                   │  │  if score > bestScore:         │     │
+       │                   │  │    bestMove = move             │     │
+       │                   │  └────────────────────────────────┘     │
+       │                   │                                          │
+       │◄─ bestMove ────────│                                          │
+```
+
+---
+
 ## Evaluation Perspective Diagram
 
 ```
@@ -78,6 +144,28 @@ The `evaluate()` call returns `whiteScore - blackScore`. For white, we use this 
   └──────────────────────────────────────────────────────────────┘
 ```
 
+### How StandardBoardEvaluator Scores a Position
+
+```
+  evaluate(board, depth=0) =
+
+    Σ for each WHITE piece:
+        + pieceValue          (Pawn=100, Knight=320, Bishop=330, Rook=500, Queen=900)
+        + pst[square]         (Piece-Square Table bonus for position)
+        + mobilityBonus       (legalMoves.size() × 5)
+
+    Σ for each BLACK piece:
+        - pieceValue
+        - pst[mirroredSquare]
+        - mobilityBonus
+
+    + checkBonus              (+50 if opponent is in check)
+    + checkmateBonus          (+10000 + depth if opponent is in checkmate)
+    - doublePawnPenalty       (−30 per doubled pawn)
+    - isolatedPawnPenalty     (−20 per isolated pawn)
+    + rookOpenFilebonus       (+25 if rook on open file)
+```
+
 ---
 
 ## Implementation Details
@@ -93,8 +181,28 @@ final int currentValue = board.currentPlayer().getAlliance().isWhite()
 ### Why depth=0 in the evaluate call?
 The depth parameter in the evaluator is used to scale the checkmate bonus (`CHECKMATE_BONUS + depth * DEPTH_BONUS`) so that shallower mates score higher. At depth 0 (leaf node), the bonus is just the flat `CHECKMATE_BONUS` value.
 
+```java
+// Inside StandardBoardEvaluator:
+private static int checkMateBonus(final Player player, final int depth) {
+    // Prefer faster checkmates: depth 5 mate scores higher than depth 3 mate
+    return player.getOpponent().isInCheckMate() ? CHECK_MATE_BONUS + (depth * DEPTH_BONUS) : 0;
+}
+// At Greedy depth=0: bonus = CHECK_MATE_BONUS + 0 = flat bonus
+// At AlphaBeta depth=4: bonus at deeper node = CHECK_MATE_BONUS + 4*DEPTH_BONUS
+```
+
 ### Move Validity
 `board.currentPlayer().makeMove(move)` can return `ILLEGAL_MOVE` or `LEAVES_PLAYER_IN_CHECK`. Only `DONE` transitions are evaluated — this correctly avoids moves that expose the king.
+
+```
+  MoveStatus enum:
+  ┌────────────────────────────────────────────────────────────┐
+  │  DONE               → move is legal and executed           │
+  │  ILLEGAL_MOVE       → physically impossible (shouldn't     │
+  │                        happen if legalMoves() is correct)  │
+  │  LEAVES_PLAYER_IN_CHECK → move exposes own king → skip     │
+  └────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -158,4 +266,40 @@ The depth parameter in the evaluator is used to scale the checkmate bonus (`CHEC
 
   Greedy takes the pawn (+100), White plays Qxf7# → CHECKMATE
   Greedy couldn't see 1 move further to notice the threat.
+```
+
+### Why Greedy Fails Here — Decision Tree
+
+```
+  Black to move, Greedy evaluates depth=1 only:
+
+  [Current position]
+       ├── ...exd4  → eval = +100  (captures pawn, looks great)  ← CHOSEN
+       ├── ...Nf6   → eval = +5    (develops knight, blocks queen)
+       └── ...Ke7   → eval = -50   (king runs)
+
+  What MINIMAX (Level 3) would see at depth=2:
+  [Current position]
+       ├── ...exd4  → [White: Qxf7#] → eval = -10000  CHECKMATE  ← AVOIDED
+       ├── ...Nf6   → [White: best]  → eval = -20               ← CHOSEN
+       └── ...Ke7   → [White: best]  → eval = -40
+```
+
+---
+
+## Progression to Level 3
+
+```
+  What Greedy is missing that MiniMax adds:
+  ┌──────────────────────────────────────────────────────────────┐
+  │                                                              │
+  │  Greedy: evaluates board AFTER own move only (1 ply)        │
+  │                                                              │
+  │  MiniMax: evaluates sequences own→opponent→own (3 plies)     │
+  │           models opponent as playing optimally               │
+  │                                                              │
+  │  Cost:   27,000 evaluate() calls instead of ~30             │
+  │  Gain:   avoids 2-move traps, spots 3-move tactics           │
+  │                                                              │
+  └──────────────────────────────────────────────────────────────┘
 ```

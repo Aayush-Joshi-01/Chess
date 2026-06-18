@@ -108,6 +108,111 @@ function MiniMaxMove(board):
 
 ---
 
+## Java Implementation
+
+```java
+// MiniMaxStrategy.java
+public final class MiniMaxStrategy implements MoveStrategy {
+
+    private static final BoardEvaluator EVALUATOR = new StandardBoardEvaluator();
+    private static final int DEPTH = 3;
+
+    @Override
+    public Move execute(final Board board) {
+        Move bestMove  = Move.NULL_MOVE;
+        int  bestScore = Integer.MIN_VALUE;
+
+        for (final Move move : board.currentPlayer().getLegalMoves()) {
+            final MoveTransition transition =
+                    board.currentPlayer().makeMove(move);
+
+            if (transition.getMoveStatus().isDone()) {
+                // After our move, it's the opponent's turn.
+                // White maximises, so after white moves it's black's turn (MIN).
+                // Black minimises, so after black moves it's white's turn (MAX).
+                final int score = board.currentPlayer().getAlliance().isWhite()
+                        ? min(transition.getTransitionBoard(), DEPTH - 1)
+                        : max(transition.getTransitionBoard(), DEPTH - 1);
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove  = move;
+                }
+            }
+        }
+        return bestMove;
+    }
+
+    // MAX node: current player wants highest score (White's perspective)
+    private int max(final Board board, final int depth) {
+        if (depth == 0 || isEndGame(board)) {
+            return EVALUATOR.evaluate(board, depth);
+        }
+        int best = Integer.MIN_VALUE;
+        for (final Move move : board.currentPlayer().getLegalMoves()) {
+            final MoveTransition transition =
+                    board.currentPlayer().makeMove(move);
+            if (transition.getMoveStatus().isDone()) {
+                best = Math.max(best,
+                        min(transition.getTransitionBoard(), depth - 1));
+            }
+        }
+        return best;
+    }
+
+    // MIN node: opponent wants lowest score (minimise white's advantage)
+    private int min(final Board board, final int depth) {
+        if (depth == 0 || isEndGame(board)) {
+            return EVALUATOR.evaluate(board, depth);
+        }
+        int best = Integer.MAX_VALUE;
+        for (final Move move : board.currentPlayer().getLegalMoves()) {
+            final MoveTransition transition =
+                    board.currentPlayer().makeMove(move);
+            if (transition.getMoveStatus().isDone()) {
+                best = Math.min(best,
+                        max(transition.getTransitionBoard(), depth - 1));
+            }
+        }
+        return best;
+    }
+
+    private static boolean isEndGame(final Board board) {
+        return board.currentPlayer().isInCheckMate()
+            || board.currentPlayer().isInStaleMate();
+    }
+
+    @Override
+    public String getStrategyName() { return "MiniMax"; }
+}
+```
+
+---
+
+## Sequence Diagram: MiniMax Recursion
+
+```
+  execute()           max()               min()          Evaluator
+     │                  │                   │                │
+     │─ makeMove(A) ───►│ (depth=2 WHITE)   │                │
+     │                  │─ makeMove(A.r1) ──►│(depth=1 BLACK)│
+     │                  │                   │─ makeMove(r1.w1)►(depth=0)
+     │                  │                   │                │─ evaluate()
+     │                  │                   │◄────────────────│ +50
+     │                  │                   │─ makeMove(r1.w2)►(depth=0)
+     │                  │                   │                │─ evaluate()
+     │                  │                   │◄────────────────│ +20
+     │                  │                   │  min(50,20)=-∞? │
+     │                  │                   │  best = +20     │
+     │                  │◄─ min returns +20 ─│                │
+     │                  │─ makeMove(A.r2) ──►│                │
+     │                  │       ...         │                │
+     │                  │  max(20, ...) = X  │                │
+     │◄─ score X ───────│                   │                │
+```
+
+---
+
 ## Node Count at Each Depth
 
 ```
@@ -124,6 +229,16 @@ function MiniMaxMove(board):
 
   Alpha-Beta (Level 4) at the same depth explores only ~b^(d/2) nodes:
     depth 4 with pruning ≈ 30^2 = ~900 nodes  (vs 810,000 raw)
+```
+
+### Node Growth Visualised
+
+```
+  Nodes:  30          900         27,000       810,000
+           │           │             │              │
+  Depth:  [1]─────────[2]──────────[3]────────────[4]
+           ■           ■■■          ■■■■■■■■■■     ■■■■■■■■■■■■■■■■
+                                    ^L3 stops here  ^would need AB pruning
 ```
 
 ---
@@ -152,13 +267,40 @@ Returns `true` if the current player is in checkmate or stalemate. At these term
 - Checkmate: `10000 + depth` (high positive for the side that delivered it, scaled by depth so shallower mates rank higher)
 - Stalemate: near-zero (slightly negative for the side that caused it)
 
+```java
+// Why depth matters in checkmate scoring:
+// Mate in 1 (depth=2 remaining): bonus = 10000 + 2 = 10002
+// Mate in 3 (depth=0 remaining): bonus = 10000 + 0 = 10000
+// MiniMax prefers 10002 over 10000 → always plays the faster mate
+```
+
 ### Evaluation is from White's absolute perspective
 `StandardBoardEvaluator.evaluate()` always returns `whiteScore - blackScore`. The MAX node maximises this (White wants higher) and the MIN node minimises this (Black wants lower). This is correct because:
 - White's MAX node picks the move that yields the largest `whiteScore - blackScore`
 - Black's MIN node picks the move that yields the smallest `whiteScore - blackScore`
 
+```
+  Evaluation polarity at each depth:
+  ┌──────────────────────────────────────────────────────────────┐
+  │  Depth 0 (root, White):  MAX → wants evaluate() > 0         │
+  │  Depth 1 (Black):        MIN → wants evaluate() < 0         │
+  │  Depth 2 (White):        MAX → wants evaluate() > 0         │
+  │  Depth 3 (leaf, Black):  MIN → evaluate() returned as-is    │
+  └──────────────────────────────────────────────────────────────┘
+```
+
 ### Why separate MAX and MIN instead of negamax?
 Pure educational value. The negamax formulation (used in Levels 4–6) collapses the two functions into one by negating the score on alternation, but is harder to read. MiniMax at Level 3 deliberately keeps the explicit asymmetry so the code mirrors the textbook algorithm exactly.
+
+```
+  MiniMax (Level 3):         Negamax (Level 4+):
+  ──────────────────         ───────────────────
+  max(board, depth)          negamax(board, depth, α, β)
+  min(board, depth)              score = -negamax(child, ...)
+  2 separate functions       1 function, sign negated on recurse
+  Easier to read             Harder to read, but more compact
+  White/Black asymmetric     Always "current player" perspective
+```
 
 ---
 
@@ -190,3 +332,22 @@ Pure educational value. The negamax formulation (used in Levels 4–6) collapses
 - 3-ply means it misses 4-move combinations
 - No move ordering — evaluates moves in arbitrary order (no speedup from good moves first)
 - Horizon effect: a forced loss just past depth 3 looks like a draw or win
+
+---
+
+## Progression to Level 4
+
+```
+  What MiniMax is missing that Alpha-Beta adds:
+  ┌──────────────────────────────────────────────────────────────┐
+  │                                                              │
+  │  MiniMax: evaluates ALL 810,000 nodes at depth 4            │
+  │                                                              │
+  │  Alpha-Beta: skips subtrees that CANNOT change the result   │
+  │              evaluates only ~10,000–40,000 nodes at depth 4 │
+  │                                                              │
+  │  Result: IDENTICAL move choice, but 20–80× faster           │
+  │          Speed gain used to search 1 ply deeper (depth 4)   │
+  │                                                              │
+  └──────────────────────────────────────────────────────────────┘
+```

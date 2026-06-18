@@ -60,6 +60,59 @@ No tree search, no evaluation, no lookahead. Every legal move has equal probabil
 
 ---
 
+## Java Implementation
+
+```java
+// RandomMoveStrategy.java
+public final class RandomMoveStrategy implements MoveStrategy {
+
+    @Override
+    public Move execute(final Board board) {
+        // Collect all legal moves for the current player
+        final List<Move> moves =
+                new ArrayList<>(board.currentPlayer().getLegalMoves());
+
+        // No moves → already in checkmate/stalemate (GUI handles this,
+        // but guard against it defensively)
+        if (moves.isEmpty()) {
+            return Move.NULL_MOVE;
+        }
+
+        // Fisher-Yates shuffle via Collections utility
+        Collections.shuffle(moves);
+
+        // First element after shuffle is uniformly random
+        return moves.get(0);
+    }
+
+    @Override
+    public String getStrategyName() {
+        return "Random";
+    }
+}
+```
+
+### Sequence Diagram: Random Move Execution
+
+```
+  GUI / AIThinkTank          RandomMoveStrategy           Board / Player
+        │                            │                          │
+        │── execute(board) ─────────►│                          │
+        │                            │── getLegalMoves() ──────►│
+        │                            │◄─ ImmutableList<Move> ───│
+        │                            │                          │
+        │                            │── new ArrayList(moves)   │
+        │                            │── Collections.shuffle()  │
+        │                            │── return moves.get(0)    │
+        │                            │                          │
+        │◄── Move ───────────────────│                          │
+        │                            │                          │
+        │── board.makeMove(move) ────────────────────────────►  │
+        │◄── MoveTransition ─────────────────────────────────   │
+```
+
+---
+
 ## Decision Space Visualised
 
 ```
@@ -101,11 +154,45 @@ No tree search, no evaluation, no lookahead. Every legal move has equal probabil
 ### Move Collection
 `board.currentPlayer().getLegalMoves()` returns an `ImmutableList<Move>` built during board construction. This list already includes all special moves (castling, en passant, promotions) because they are added at the `Player` level, not just the piece level.
 
+```
+  ImmutableList<Move> structure for a typical opening position:
+  ┌─────────────────────────────────────────────────────────────┐
+  │  Index │ Move      │ Type              │ Source             │
+  │  ──────┼───────────┼───────────────────┼──────────────────  │
+  │    0   │ a2-a3     │ PawnMove          │ Pawn.legalMoves()  │
+  │    1   │ a2-a4     │ PawnJump          │ Pawn.legalMoves()  │
+  │    2   │ b2-b3     │ PawnMove          │ Pawn.legalMoves()  │
+  │   ...  │ ...       │ ...               │ ...                │
+  │   19   │ Ng1-f3    │ MajorMove         │ Knight.legalMoves()│
+  │   20   │ Ng1-h3    │ MajorMove         │ Knight.legalMoves()│
+  │   ...  │ ...       │ ...               │ ...                │
+  │   28   │ O-O       │ KingSideCastle    │ Player.castles()   │
+  └─────────────────────────────────────────────────────────────┘
+  Note: castles only appear once king & rook isFirstMove = true
+```
+
 ### Shuffle
 `Collections.shuffle(legalMoves)` uses Java's default `Random` (seeded from `System.nanoTime()`), giving each game a different move sequence. The list is copied to an `ArrayList` first since `ImmutableList` doesn't support in-place shuffling.
 
+```java
+// Why we copy to ArrayList first:
+// ImmutableList.shuffle() → UnsupportedOperationException!
+final List<Move> moves = new ArrayList<>(board.currentPlayer().getLegalMoves());
+Collections.shuffle(moves);   // mutates the ArrayList, not the ImmutableList
+```
+
 ### Edge Case
 If `legalMoves` is empty (checkmate or stalemate), `NULL_MOVE` is returned. The GUI detects this state before ever calling the AI, but the guard is there for safety.
+
+```java
+// NULL_MOVE sentinel in Move.java
+public static final Move NULL_MOVE = new NullMove();
+
+private static final class NullMove extends Move {
+    @Override public Board execute() { throw new RuntimeException("Null move!"); }
+    @Override public String toString() { return "null"; }
+}
+```
 
 ---
 
@@ -123,3 +210,22 @@ If `legalMoves` is empty (checkmate or stalemate), `NULL_MOVE` is returned. The 
 - Useful for teaching absolute beginners who need a non-threatening opponent
 - Useful for testing move generation: if Random plays 1000 games without crashing, the legal move generator is likely correct
 - Provides a measurable lower bound on AI strength
+
+---
+
+## Progression to Level 2
+
+```
+  What Random is missing that Greedy adds:
+  ┌──────────────────────────────────────────────────────────────┐
+  │                                                              │
+  │  Random: picks move[0] after shuffle — no evaluation        │
+  │                                                              │
+  │  Greedy: for EACH move, calls StandardBoardEvaluator         │
+  │          and picks the move with the best score             │
+  │                                                              │
+  │  Cost:   30 evaluate() calls instead of 0                   │
+  │  Gain:   always captures free pieces, delivers 1-move mates  │
+  │                                                              │
+  └──────────────────────────────────────────────────────────────┘
+```

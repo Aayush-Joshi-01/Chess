@@ -51,6 +51,26 @@ Level 6 builds on everything in Level 5 and adds four more techniques used by se
   └───────────────────────────────────────────────────────────────┘
 ```
 
+### Null-Move Decision Tree
+
+```
+  negamax(board, depth=6, α, β):
+      │
+      ├── inCheck? YES → skip null-move (must search all replies)
+      │
+      ├── depth < R+1? YES → skip (not enough depth for reduction)
+      │
+      └── NO → try null move:
+               nullScore = sign × evaluate(board, depth - R - 1)
+                         = sign × evaluate(board, 3)     // R=2, depth=6
+               │
+               ├── nullScore >= β → PRUNE (return β, skip real moves)
+               │                    saves entire subtree
+               │
+               └── nullScore < β  → continue normally, search all moves
+                                    (but null-move flag set: no double null)
+```
+
 ### Algorithm
 
 ```
@@ -62,6 +82,28 @@ if nullMoveAllowed and depth >= R+1 and not inCheck:
 
   R = 2  (reduction factor)
   depth 6 → null move evaluated at depth 3 (6 - 2 - 1 = 3)
+```
+
+### Java Implementation
+
+```java
+// Inside AdvancedAlphaBetaStrategy.negamax():
+if (allowNullMove && depth >= NULL_MOVE_R + 1
+        && !board.currentPlayer().isInCheck()) {
+
+    // Approximate null move with static evaluation at reduced depth
+    final int nullScore = sign(board)
+            * EVALUATOR.evaluate(board, depth - NULL_MOVE_R - 1);
+
+    if (nullScore >= beta) {
+        return beta;  // null-move cutoff — branch is too good for opponent to allow
+    }
+}
+
+// After null-move, recurse with allowNullMove=false (no "double null")
+final int score = -negamax(child, depth-1, -beta, -alpha,
+                           deadline, hash, /*allowNullMove=*/true);
+// Null-move subtree itself uses allowNullMove=false to prevent double null
 ```
 
 ### When Null-Move CANNOT Be Applied
@@ -102,6 +144,29 @@ if nullMoveAllowed and depth >= R+1 and not inCheck:
   └────────────────────────────────────────────────────────────┘
 ```
 
+### LMR Decision Tree
+
+```
+  for each move (ordered):
+      moveCount++
+      │
+      ├── moveCount <= 4?       → full depth search  (always search top moves)
+      ├── inCheck?              → full depth search  (must see all replies)
+      ├── isCapture?            → full depth search  (captures can be good)
+      ├── isPromotion?          → full depth search  (promotions matter)
+      ├── depth < 3?            → full depth search  (too shallow to reduce)
+      │
+      └── all guards passed:
+              │
+              ├── Scout search: -negamax(child, depth-2, -α-1, -α)
+              │                  ↑ reduced depth, null window
+              │
+              ├── score <= α? → move is bad, skip full search
+              │
+              └── score > α?  → re-search at full depth: -negamax(child, depth-1, -β, -α)
+                                 ↑ confirms the move is actually good
+```
+
 ### Algorithm
 
 ```
@@ -122,6 +187,55 @@ for each move in orderedMoves:
             score ← -negamax(child, depth-1, -β, -α)
     else:
         score ← -negamax(child, depth-1, -β, -α)
+```
+
+### Java Implementation
+
+```java
+// Inside AdvancedAlphaBetaStrategy.negamax():
+int moveCount = 0;
+
+for (final Move move : MOVE_ORDERING.orderMoves(legalMoves, board, depth)) {
+    final MoveTransition t = board.currentPlayer().makeMove(move);
+    if (!t.getMoveStatus().isDone()) continue;
+
+    moveCount++;
+    final Board child     = t.getTransitionBoard();
+    final long  childHash = ZobristHasher.hash(child);
+    int score;
+
+    final boolean doLMR = !board.currentPlayer().isInCheck()
+            && moveCount > LMR_THRESHOLD          // move #4+
+            && depth >= 3                          // not too shallow
+            && !move.isAttack()                    // not a capture
+            && !(move instanceof Move.PawnPromotion);
+
+    if (doLMR) {
+        // Scout at depth-2 with null window [-α-1, -α]
+        score = -negamax(child, depth - 2, -alpha - 1, -alpha,
+                         deadline, childHash, true);
+
+        if (score > alpha) {
+            // Scout raised alpha → re-search at full depth
+            score = -negamax(child, depth - 1, -beta, -alpha,
+                             deadline, childHash, true);
+        }
+    } else {
+        // Full-depth search for captures, killers, early moves
+        score = -negamax(child, depth - 1, -beta, -alpha,
+                         deadline, childHash, true);
+    }
+
+    if (score >= beta) {
+        MOVE_ORDERING.recordKiller(move, depth);
+        return beta;
+    }
+    if (score > best) {
+        best  = score;
+        alpha = Math.max(alpha, score);
+        MOVE_ORDERING.recordHistory(move, depth);
+    }
+}
 ```
 
 ### The Null Window `-α-1` Explained
@@ -167,6 +281,36 @@ for each move in orderedMoves:
   horizon looks like a win.
 ```
 
+### Horizon Effect Tree Diagram
+
+```
+  Without Quiescence Search:
+  ──────────────────────────
+
+  negamax(depth=3)
+      └── White: Rxe5 (captures rook, +500)
+          └── [SEARCH STOPS] evaluate() → +500 ← WRONG
+
+  Reality (not seen):
+      └── White: Rxe5
+          └── Black: Nxe5 (recaptures)
+              └── evaluate() → +0  (net even trade)
+
+
+  With Quiescence Search:
+  ───────────────────────
+
+  negamax(depth=3)
+      └── White: Rxe5
+          └── [depth=0] → quiescence(board)
+              ├── standPat = +500
+              └── captures available: Nxe5 by Black
+                  └── -quiescence(after Nxe5)
+                      ├── standPat = +0 (rook returned)
+                      └── no more captures → return 0
+              return max(500, -0) = 0   ← CORRECT
+```
+
 ### Quiescence Algorithm
 
 ```
@@ -187,6 +331,42 @@ function quiescence(board, α, β):
             if score > α: α ← score
 
     return α   // score of the quietest reachable position
+```
+
+### Java Implementation
+
+```java
+// AdvancedAlphaBetaStrategy.java — quiescence search
+private int quiescence(final Board board, int alpha, final int beta,
+                        final long deadline) {
+    if (System.currentTimeMillis() >= deadline) return 0;
+
+    // Stand-pat: evaluate without making a capture
+    final int standPat = sign(board) * EVALUATOR.evaluate(board, 0);
+
+    if (standPat >= beta)  return beta;   // stand-pat cutoff
+    if (standPat > alpha)  alpha = standPat;
+
+    // Search only captures (and promotions)
+    for (final Move move : board.currentPlayer().getLegalMoves()) {
+        if (!move.isAttack() && !(move instanceof Move.PawnPromotion)) continue;
+
+        // Delta pruning: if even capturing this piece can't raise alpha, skip
+        if (move.isAttack()) {
+            final int capturedValue = move.getAttackedPiece().getPieceValue();
+            if (standPat + capturedValue + DELTA_MARGIN < alpha) continue;
+        }
+
+        final MoveTransition t = board.currentPlayer().makeMove(move);
+        if (!t.getMoveStatus().isDone()) continue;
+
+        final int score = -quiescence(t.getTransitionBoard(), -beta, -alpha, deadline);
+
+        if (score >= beta)  return beta;
+        if (score > alpha)  alpha = score;
+    }
+    return alpha;
+}
 ```
 
 ### Stand-Pat Explained
@@ -223,6 +403,30 @@ function quiescence(board, α, β):
   └──────────────────────────────────────────────────────────────┘
 ```
 
+### Quiescence Sequence Diagram
+
+```
+  negamax(depth=0)       quiescence()           quiescence() child
+         │                     │                       │
+         │── return qSearch() ►│                       │
+         │                     │── standPat=evaluate() │
+         │                     │  standPat < β, > α    │
+         │                     │  α = standPat         │
+         │                     │                       │
+         │                     │── filter: captures only
+         │                     │── move: Rxe5 (capture rook)
+         │                     │── makeMove() ────────►│
+         │                     │                       │── standPat=evaluate()
+         │                     │                       │── no more captures
+         │                     │                       │── return α
+         │                     │◄─ -score ─────────────│
+         │                     │   score > α? update α │
+         │                     │── move: Bxd4 (another capture)
+         │                     │   delta prune? skip if hopeless
+         │                     │── return α (quiet position score)
+         │◄── final score ──────│
+```
+
 ---
 
 ## 4. Futility Pruning
@@ -253,6 +457,40 @@ function quiescence(board, α, β):
   └──────────────────────────────────────────────────────────────┘
 ```
 
+### Java Implementation
+
+```java
+// Inside AdvancedAlphaBetaStrategy.negamax():
+// Futility pruning near leaf nodes
+if (!board.currentPlayer().isInCheck() && depth <= 2) {
+    final int staticEval = sign(board) * EVALUATOR.evaluate(board, depth);
+    final int margin = (depth == 1) ? FUTILITY_MARGIN_1   // 200
+                                    : FUTILITY_MARGIN_2;  // 400
+    if (staticEval + margin <= alpha) {
+        // Statically hopeless — skip quiet moves, run quiescence
+        return quiescence(board, alpha, beta, deadline);
+    }
+}
+```
+
+### Futility Decision Flowchart
+
+```
+  negamax(depth=1 or 2):
+      │
+      ├── inCheck? YES → skip futility, search all moves normally
+      │
+      ├── staticEval + margin > alpha? YES → search normally
+      │
+      └── staticEval + margin ≤ alpha:
+              │
+              └── FUTILITY: jump straight to quiescence()
+                  ├── quiescence will still find tactical wins
+                  │   (it searches captures only)
+                  └── quiet moves skipped entirely
+                      (they can't raise alpha by definition)
+```
+
 ---
 
 ## 5. The Full Search Stack
@@ -277,6 +515,104 @@ function quiescence(board, α, β):
   └─────────────────────────────────────────────────────────────┘
 ```
 
+### Full negamax Method
+
+```java
+// AdvancedAlphaBetaStrategy.java — complete negamax
+private int negamax(final Board board, final int depth,
+                    int alpha, final int beta,
+                    final long deadline, final long hash,
+                    final boolean allowNullMove) {
+
+    if (System.currentTimeMillis() >= deadline) return 0;
+
+    // 1. TT probe
+    final TranspositionTable.Entry entry = TT.probe(hash);
+    if (entry != null && entry.depth() >= depth) {
+        if (entry.flag() == TranspositionTable.EXACT) return entry.score();
+        if (entry.flag() == TranspositionTable.LOWER) alpha = Math.max(alpha, entry.score());
+        if (entry.flag() == TranspositionTable.UPPER) beta  = Math.min(beta,  entry.score());
+        if (alpha >= beta) return entry.score();
+    }
+
+    // 2. Terminal / leaf
+    if (depth == 0 || isEndGame(board)) {
+        return quiescence(board, alpha, beta, deadline);
+    }
+
+    // 3. Null-move pruning
+    if (allowNullMove && depth >= NULL_MOVE_R + 1
+            && !board.currentPlayer().isInCheck()) {
+        final int nullScore = sign(board)
+                * EVALUATOR.evaluate(board, depth - NULL_MOVE_R - 1);
+        if (nullScore >= beta) return beta;
+    }
+
+    // 4. Futility pruning (depth 1 or 2 from leaf)
+    if (!board.currentPlayer().isInCheck() && depth <= 2) {
+        final int staticEval = sign(board) * EVALUATOR.evaluate(board, depth);
+        final int margin = (depth == 1) ? FUTILITY_MARGIN_1 : FUTILITY_MARGIN_2;
+        if (staticEval + margin <= alpha) {
+            return quiescence(board, alpha, beta, deadline);
+        }
+    }
+
+    // 5. Main search
+    int best      = Integer.MIN_VALUE;
+    int flag      = TranspositionTable.UPPER;
+    int moveCount = 0;
+
+    for (final Move move : MOVE_ORDERING.orderMoves(
+            board.currentPlayer().getLegalMoves(), board, depth)) {
+
+        final MoveTransition t = board.currentPlayer().makeMove(move);
+        if (!t.getMoveStatus().isDone()) continue;
+        moveCount++;
+
+        final Board child     = t.getTransitionBoard();
+        final long  childHash = ZobristHasher.hash(child);
+        int score;
+
+        // 6. Late Move Reduction
+        final boolean doLMR = !board.currentPlayer().isInCheck()
+                && moveCount > LMR_THRESHOLD
+                && depth >= 3
+                && !move.isAttack()
+                && !(move instanceof Move.PawnPromotion);
+
+        if (doLMR) {
+            score = -negamax(child, depth - 2, -alpha - 1, -alpha,
+                             deadline, childHash, true);
+            if (score > alpha) {
+                score = -negamax(child, depth - 1, -beta, -alpha,
+                                 deadline, childHash, true);
+            }
+        } else {
+            score = -negamax(child, depth - 1, -beta, -alpha,
+                             deadline, childHash, true);
+        }
+
+        if (score >= beta) {
+            TT.store(hash, depth, beta, TranspositionTable.LOWER,
+                     move.getCurrentCoordinate() << 6 | move.getDestinationCoordinate());
+            MOVE_ORDERING.recordKiller(move, depth);
+            return beta;
+        }
+        if (score > best) {
+            best = score;
+            flag = (score > alpha) ? TranspositionTable.EXACT : TranspositionTable.UPPER;
+            if (score > alpha) {
+                alpha = score;
+                MOVE_ORDERING.recordHistory(move, depth);
+            }
+        }
+    }
+
+    TT.store(hash, depth, best, flag, 0);
+    return best;
+}
+```
+
 ---
 
 ## 6. Full Move Ordering Priority
@@ -292,6 +628,44 @@ function quiescence(board, α, β):
   │     5     │ History heuristic   │ 0 – 8999                  │
   │     6     │ Other quiet moves   │ 0                         │
   └─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 7. Full Sequence Diagram: A Level 6 Move Decision
+
+```
+  AIThinkTank      execute()      rootSearch()    negamax()   quiescence()
+       │               │                │              │             │
+       │─ execute() ──►│                │              │             │
+       │               │─ depth=1 ─────►│              │             │
+       │               │               │─ makeMove() ─►│             │
+       │               │               │              │─ TT probe    │
+       │               │               │              │  (cold miss) │
+       │               │               │              │─ depth=0     │
+       │               │               │              │─ qSearch() ─►│
+       │               │               │              │             │─ standPat
+       │               │               │              │             │─ captures
+       │               │               │              │             │─ return α
+       │               │               │              │◄─ score ────│
+       │               │◄─ result ─────│              │             │
+       │               │               │              │             │
+       │               │─ depth=2 ─────►│              │             │
+       │               │  (aspiration  │─ null-move ──►│             │
+       │               │   window ±50) │  check        │             │
+       │               │               │─ LMR for late moves         │
+       │               │               │─ each move:  │             │
+       │               │               │  negamax(d=1)►│             │
+       │               │               │              │─ futility?   │
+       │               │               │              │  → qSearch() │
+       │               │               │              │◄─ score ─────│
+       │               │               │◄─ result ────│             │
+       │               │               │              │             │
+       │               │  ... depths 3,4,5,6 ...      │             │
+       │               │  [deadline reached]          │             │
+       │               │── return bestMove from last   │             │
+       │               │   complete depth             │             │
+       │◄─ Move ───────│                              │             │
 ```
 
 ---
