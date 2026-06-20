@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Algorithms — Chess Engine</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .page-hero {
+      padding: 120px 2rem 4rem;
+      text-align: center;
+      background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(212,168,83,.1) 0%, transparent 70%);
+      border-bottom: 1px solid var(--border);
+    }
+    .page-hero h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem); font-weight:800;
+      background: linear-gradient(135deg, var(--gold-lt), var(--gold));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      margin-bottom:.75rem;
+    }
+    .page-hero p { color:var(--muted); max-width:48ch; margin:0 auto; font-size:1.05rem; }
+
+    /* level nav pills */
+    .level-nav {
+      display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center;
+      padding:1.5rem 2rem; background:var(--surface);
+      border-bottom:1px solid var(--border); position:sticky; top:60px; z-index:50;
+    }
+    .level-pill {
+      display:inline-flex; align-items:center; gap:.4rem;
+      padding:.35rem .9rem; border-radius:20px;
+      font-size:.82rem; font-weight:600;
+      border:1px solid var(--border); background:var(--raised);
+      color:var(--muted); transition:all .2s; cursor:pointer; text-decoration:none;
+    }
+    .level-pill:hover { border-color:var(--gold); color:var(--gold); }
+
+    .main-content { max-width:1100px; margin:0 auto; padding:0 2rem; }
+
+    /* comparison table */
+    .compare-table { width:100%; border-collapse:collapse; font-size:.85rem; margin-top:1rem; }
+    .compare-table th { background:var(--raised); color:var(--gold); padding:.6rem 1rem;
+      text-align:left; border:1px solid var(--border); font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; }
+    .compare-table td { padding:.6rem 1rem; border:1px solid var(--border); color:var(--muted); vertical-align:top; }
+    .compare-table tr:hover td { background:rgba(212,168,83,.04); }
+    .tag { display:inline-block; padding:.15rem .5rem; border-radius:4px; font-size:.72rem; font-weight:600; }
+    .tag-green { background:rgba(63,185,80,.15); color:var(--green); }
+    .tag-red   { background:rgba(248,81,73,.15);  color:var(--red); }
+    .tag-gold  { background:rgba(212,168,83,.15); color:var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-brand"><span class="crown">♔</span><span>Chess Engine</span></div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="algorithms.html">Algorithms</a></li>
+    <li><a href="architecture.html">Architecture</a></li>
+    <li><a href="https://github.com/Aayush-Joshi-01/Chess/releases/latest" class="nav-download" target="_blank">⬇ Download</a></li>
+  </ul>
+</nav>
+
+<!-- ── Page Hero ─────────────────────────────────────────────── -->
+<div class="page-hero">
+  <span class="section-tag">Under the Hood</span>
+  <h1>The Six AI Engines</h1>
+  <p>Each level introduces a new fundamental algorithm — not just a deeper search. Watch them in action below.</p>
+</div>
+
+<!-- ── Level Nav Pills ───────────────────────────────────────── -->
+<div class="level-nav">
+  <a href="#level-1" class="level-pill"><span class="level-badge l1" style="width:22px;height:22px;font-size:.65rem;">L1</span> Random</a>
+  <a href="#level-2" class="level-pill"><span class="level-badge l2" style="width:22px;height:22px;font-size:.65rem;">L2</span> Greedy</a>
+  <a href="#level-3" class="level-pill"><span class="level-badge l3" style="width:22px;height:22px;font-size:.65rem;">L3</span> MiniMax</a>
+  <a href="#level-4" class="level-pill"><span class="level-badge l4" style="width:22px;height:22px;font-size:.65rem;">L4</span> Alpha-Beta</a>
+  <a href="#level-5" class="level-pill"><span class="level-badge l5" style="width:22px;height:22px;font-size:.65rem;">L5</span> Iterative Deep.</a>
+  <a href="#level-6" class="level-pill"><span class="level-badge l6" style="width:22px;height:22px;font-size:.65rem;">L6</span> Advanced</a>
+</div>
+
+<div class="main-content">
+
+<!-- ════════════════════════════════════════════════════════════
+     LEVEL 1 — RANDOM
+═══════════════════════════════════════════════════════════════ -->
+<section class="algo-page-section" id="level-1">
+  <div class="algo-header">
+    <div class="level-badge l1">L1</div>
+    <div class="algo-header-text">
+      <h2>Random Move</h2>
+      <div class="meta">
+        <span>~200 Elo</span><span>0 plies of lookahead</span><span>&lt;1 ms</span>
+        <span style="color:var(--muted);">RandomMoveStrategy.java</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="algo-body">
+    <div class="algo-viz-wrap fade-in">
+      <h4>Live Simulation — picking a random move every 1.6 s</h4>
+      <div class="random-moves" id="random-viz">
+        <div class="move-card">e2–e4</div>
+        <div class="move-card">d2–d4</div>
+        <div class="move-card">Ng1–f3</div>
+        <div class="move-card">f1–c4</div>
+        <div class="move-card">O-O</div>
+        <div class="move-card">e4×d5</div>
+        <div class="move-card">Qd1–h5</div>
+        <div class="move-card">Nb1–c3</div>
+      </div>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:.75rem;">
+        All legal moves are equally likely — even blunders and sacrifices.
+      </p>
+    </div>
+
+    <div class="concept-cards fade-in">
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">How It Works</div>
+        <p>Copy the legal-move list into an ArrayList, call <code>Collections.shuffle()</code>, return index 0. No evaluation. No lookahead. The engine is literally rolling dice.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Why It's Useful</div>
+        <p>A perfect baseline. Any algorithm must beat Random to be considered a chess AI at all. Also useful for variety in self-play training games.</p>
+      </div>
+      <div class="pro-con">
+        <div class="pros">
+          <h5>Strengths</h5>
+          <ul>
+            <li>Instant response</li>
+            <li>Unpredictable</li>
+            <li>Simple to verify</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>Weaknesses</h5>
+          <ul>
+            <li>Hangs pieces freely</li>
+            <li>Never plans ahead</li>
+            <li>~200 Elo ceiling</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     LEVEL 2 — GREEDY
+═══════════════════════════════════════════════════════════════ -->
+<section class="algo-page-section" id="level-2">
+  <div class="algo-header">
+    <div class="level-badge l2">L2</div>
+    <div class="algo-header-text">
+      <h2>Greedy (1-Ply)</h2>
+      <div class="meta">
+        <span>~400 Elo</span><span>1 ply of lookahead</span><span>~5 ms</span>
+        <span style="color:var(--muted);">GreedyStrategy.java</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="algo-body">
+    <div class="algo-viz-wrap fade-in">
+      <h4>Score all moves — pick the highest bar</h4>
+      <div id="greedy-viz">
+        <div class="greedy-bars">
+          <div class="bar-wrap">
+            <div class="bar-score" id="gs0">15</div>
+            <div class="bar" id="gb0" style="height:8%"></div>
+            <div class="bar-label">e4</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-score" id="gs1">25</div>
+            <div class="bar" id="gb1" style="height:14%"></div>
+            <div class="bar-label">Nf3</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-score" id="gs2">+900</div>
+            <div class="bar" id="gb2" style="height:96%" class="best"></div>
+            <div class="bar-label">Q×d8</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-score" id="gs3">5</div>
+            <div class="bar" id="gb3" style="height:3%"></div>
+            <div class="bar-label">h3</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-score" id="gs4">30</div>
+            <div class="bar" id="gb4" style="height:20%"></div>
+            <div class="bar-label">d4</div>
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:.5rem;text-align:center;">
+          Material captured this move (centipawns). Takes the queen → wins 900 cp.
+        </p>
+      </div>
+    </div>
+
+    <div class="concept-cards fade-in">
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">How It Works</div>
+        <p>For every legal move: execute it on a trial board, call the evaluator (material + piece-square tables), undo. Keep the highest-scoring move. No recursion.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">The Horizon Problem</div>
+        <p>Greedy always takes the queen — even if you'll lose your own queen on the very next move. It cannot see one move ahead. MiniMax solves this.</p>
+      </div>
+      <div class="pro-con">
+        <div class="pros">
+          <h5>Strengths</h5>
+          <ul>
+            <li>Never hangs pieces</li>
+            <li>Captures freely</li>
+            <li>Fast (&lt;5 ms)</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>Weaknesses</h5>
+          <ul>
+            <li>Falls into traps</li>
+            <li>No positional play</li>
+            <li>Horizon effect</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     LEVEL 3 — MINIMAX
+═══════════════════════════════════════════════════════════════ -->
+<section class="algo-page-section" id="level-3">
+  <div class="algo-header">
+    <div class="level-badge l3">L3</div>
+    <div class="algo-header-text">
+      <h2>MiniMax</h2>
+      <div class="meta">
+        <span>~700 Elo</span><span>3 plies</span><span>~200 ms</span>
+        <span style="color:var(--muted);">MiniMaxStrategy.java</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="algo-body">
+    <div class="algo-viz-wrap fade-in">
+      <h4>Full tree search — MAX then MIN then MAX …</h4>
+      <canvas id="mm-canvas" class="viz-canvas" width="460" height="210" style="height:210px"></canvas>
+      <div style="display:flex;gap:1rem;justify-content:center;margin-top:.75rem;font-size:.75rem;color:var(--muted);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d4a853;margin-right:4px;vertical-align:middle;"></span>Visited</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3fb950;margin-right:4px;vertical-align:middle;"></span>Best path</span>
+      </div>
+    </div>
+
+    <div class="concept-cards fade-in">
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">How It Works</div>
+        <p>Alternate between MAX (your best move) and MIN (opponent's best reply) until a fixed depth. Every leaf is scored. Scores propagate back up — MAX nodes keep the largest, MIN nodes keep the smallest.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Why Every Node?</div>
+        <p>MiniMax visits <strong>every</strong> node in the tree — b<sup>d</sup> nodes at depth d with branching factor b. At depth 3 with ~30 moves, that's 27,000 nodes. Alpha-Beta dramatically cuts this.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Tree in This Example</div>
+        <p>Root=MAX. Three MIN children (A, B, C) each with three leaves. Leaf scores: A=[3,1,7]→MIN=1 · B=[4,9,5]→MIN=4 · C=[2,8,6]→MIN=2. Root picks MAX(1,4,2)=4 → plays B.</p>
+      </div>
+      <div class="pro-con">
+        <div class="pros">
+          <h5>Strengths</h5>
+          <ul>
+            <li>Sees 3 plies ahead</li>
+            <li>Avoids basic traps</li>
+            <li>Correct play guaranteed</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>Weaknesses</h5>
+          <ul>
+            <li>Searches everything</li>
+            <li>Slow at depth &gt;4</li>
+            <li>No pruning</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     LEVEL 4 — ALPHA-BETA
+═══════════════════════════════════════════════════════════════ -->
+<section class="algo-page-section" id="level-4">
+  <div class="algo-header">
+    <div class="level-badge l4">L4</div>
+    <div class="algo-header-text">
+      <h2>Alpha-Beta Pruning</h2>
+      <div class="meta">
+        <span>~1100 Elo</span><span>4 plies</span><span>~800 ms</span>
+        <span style="color:var(--muted);">AlphaBetaStrategy.java</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="algo-body">
+    <div class="algo-viz-wrap fade-in">
+      <h4>Same tree — pruned branches never searched</h4>
+      <canvas id="ab-canvas" class="viz-canvas" width="460" height="210" style="height:210px"></canvas>
+      <div style="display:flex;gap:1rem;justify-content:center;margin-top:.75rem;font-size:.75rem;color:var(--muted);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d4a853;margin-right:4px;vertical-align:middle;"></span>Visited</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f85149;margin-right:4px;vertical-align:middle;"></span>Pruned</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3fb950;margin-right:4px;vertical-align:middle;"></span>Best path</span>
+      </div>
+    </div>
+
+    <div class="concept-cards fade-in">
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">The α-β Window</div>
+        <p>Two bounds travel through the tree: <strong>α</strong> (best MAX has found) and <strong>β</strong> (best MIN has found). When α ≥ β at any node, that branch can never affect the result — stop searching it immediately.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Pruning In This Example</div>
+        <p>After searching A=1 and B=4, root α=4. When C's first leaf returns 2, MIN at C will never exceed 2 — which can't beat 4. Leaves C2 and C3 are pruned (red ✕). Same answer, fewer nodes.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Move Ordering Matters</div>
+        <p>Alpha-Beta prunes most aggressively when the best moves are searched first. MVV-LVA capture ordering (big piece captured by small piece first) brings pruning close to the theoretical √b<sup>d</sup> speedup.</p>
+      </div>
+      <div class="pro-con">
+        <div class="pros">
+          <h5>Strengths</h5>
+          <ul>
+            <li>Same result as MiniMax</li>
+            <li>Up to 99% fewer nodes</li>
+            <li>Enables depth 4+</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>Weaknesses</h5>
+          <ul>
+            <li>Fixed depth</li>
+            <li>No time management</li>
+            <li>No TT / hash</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     LEVEL 5 — ITERATIVE DEEPENING + TT
+═══════════════════════════════════════════════════════════════ -->
+<section class="algo-page-section" id="level-5">
+  <div class="algo-header">
+    <div class="level-badge l5">L5</div>
+    <div class="algo-header-text">
+      <h2>Iterative Deepening + Transposition Table</h2>
+      <div class="meta">
+        <span>~1500 Elo</span><span>6-8 plies</span><span>2 s time budget</span>
+        <span style="color:var(--muted);">IterativeDeepeningStrategy.java</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="algo-body">
+    <div class="algo-viz-wrap fade-in">
+      <h4>Search depth 1 → 2 → 3 → … until time runs out</h4>
+      <div id="id-viz">
+        <div class="id-timeline">
+          <div class="id-row">
+            <div class="id-label">Depth 1</div>
+            <div class="id-bar-wrap"><div class="id-bar" id="id-d1"></div></div>
+            <div class="id-best" id="id-best1"></div>
+          </div>
+          <div class="id-row">
+            <div class="id-label">Depth 2</div>
+            <div class="id-bar-wrap"><div class="id-bar" id="id-d2"></div></div>
+            <div class="id-best" id="id-best2"></div>
+          </div>
+          <div class="id-row">
+            <div class="id-label">Depth 3</div>
+            <div class="id-bar-wrap"><div class="id-bar" id="id-d3"></div></div>
+            <div class="id-best" id="id-best3"></div>
+          </div>
+          <div class="id-row">
+            <div class="id-label">Depth 4</div>
+            <div class="id-bar-wrap"><div class="id-bar" id="id-d4"></div></div>
+            <div class="id-best" id="id-best4"></div>
+          </div>
+        </div>
+        <div class="id-timer" id="id-timer">2000 ms</div>
+      </div>
+    </div>
+
+    <div class="concept-cards fade-in">
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Why Restart Each Depth?</div>
+        <p>Each completed depth is a guaranteed best move. If time runs out mid-depth-4, the depth-3 result is returned. Restarting is cheap because the Transposition Table caches all positions, so depth 3 re-search takes milliseconds.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Transposition Table</div>
+        <p>A 1M-entry hash map keyed by Zobrist hash (64-bit XOR fingerprint). Stores: score, search depth, bound type (EXACT / LOWER / UPPER). A cache hit avoids re-searching an entire subtree.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--muted);">Aspiration Windows</div>
+        <p>Instead of searching (−∞, +∞), search a narrow ±50 centipawn window around the previous iteration's score. If the result falls outside the window, re-search with a wider window. Saves ~20% of nodes on average.</p>
+      </div>
+      <div class="pro-con">
+        <div class="pros">
+          <h5>Strengths</h5>
+          <ul>
+            <li>Anytime algorithm</li>
+            <li>TT avoids repeats</li>
+            <li>Aspiration window savings</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>Weaknesses</h5>
+          <ul>
+            <li>No null-move pruning</li>
+            <li>No LMR</li>
+            <li>Horizon effect remains</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     LEVEL 6 — ADVANCED ALPHA-BETA
+═══════════════════════════════════════════════════════════════ -->
+<section class="algo-page-section" id="level-6">
+  <div class="algo-header">
+    <div class="level-badge l6">L6</div>
+    <div class="algo-header-text">
+      <h2>Advanced Alpha-Beta</h2>
+      <div class="meta">
+        <span>~1900 Elo</span><span>8–12 plies</span><span>2 s time budget</span>
+        <span style="color:var(--muted);">AdvancedAlphaBetaStrategy.java</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="algo-body">
+    <div class="algo-viz-wrap fade-in">
+      <h4>Six stacked pruning techniques — all firing at once</h4>
+      <canvas id="adv-canvas" class="viz-canvas" width="460" height="260" style="height:260px"></canvas>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin-top:.75rem;font-size:.72rem;color:var(--muted);">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#58a6ff;margin-right:3px;vertical-align:middle;"></span>Null-move pruned</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#f0883e;margin-right:3px;vertical-align:middle;"></span>LMR reduced</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#39d353;margin-right:3px;vertical-align:middle;"></span>Quiescence ext.</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#f85149;margin-right:3px;vertical-align:middle;"></span>Futility pruned</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d4a853;margin-right:3px;vertical-align:middle;"></span>Full search</span>
+      </div>
+    </div>
+
+    <div class="concept-cards fade-in">
+      <div class="concept-card">
+        <div class="label" style="color:var(--blue);">Null-Move Pruning</div>
+        <p>Before searching a node, try passing the move (opponent plays twice). If the position is still better than beta after this "free gift" to the opponent, the branch is pruned with reduction R=2. Skips ~30% of nodes in the middlegame.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--orange);">Late Move Reduction (LMR)</div>
+        <p>Moves ordered later in the list are statistically worse. Search them at depth−2 first. Only if they raise alpha do we re-search at full depth. Applied to non-captures, non-promotions, after the 4th move at depth≥3.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--teal);">Quiescence Search</div>
+        <p>At depth=0, keep searching captures until the position is "quiet." Prevents the horizon effect: the engine won't stop right before an obvious recapture that loses a piece.</p>
+      </div>
+      <div class="concept-card">
+        <div class="label" style="color:var(--red);">Futility Pruning</div>
+        <p>At depth 1 (margin 200cp) and depth 2 (margin 400cp), if the static evaluation + margin &lt; α, skip the move entirely — it can't possibly raise alpha. Jump straight to quiescence.</p>
+      </div>
+      <div class="pro-con">
+        <div class="pros">
+          <h5>Strengths</h5>
+          <ul>
+            <li>8–12 plies in 2 s</li>
+            <li>No horizon effect</li>
+            <li>Tactical + positional</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h5>Weaknesses</h5>
+          <ul>
+            <li>Null-move zugzwang risk</li>
+            <li>LMR can miss tactics</li>
+            <li>Complex to tune</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     COMPARISON TABLE
+═══════════════════════════════════════════════════════════════ -->
+<section style="padding:3rem 0 5rem;">
+  <div class="section-header fade-in">
+    <span class="section-tag">At A Glance</span>
+    <h2>Algorithm Comparison</h2>
+  </div>
+  <div class="fade-in" style="overflow-x:auto;">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Level</th><th>Algorithm</th><th>Depth</th><th>Nodes/Move</th>
+          <th>Response</th><th>Key Technique</th><th>Elo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-red">L1</span></td>
+          <td>Random</td><td>0</td><td>1</td><td>&lt;1 ms</td>
+          <td><code>Collections.shuffle()</code></td>
+          <td>~200</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-red">L2</span></td>
+          <td>Greedy</td><td>1</td><td>~30</td><td>~5 ms</td>
+          <td>Static evaluation</td>
+          <td>~400</td>
+        </tr>
+        <tr>
+          <td><span class="tag" style="background:rgba(88,166,255,.15);color:#58a6ff;">L3</span></td>
+          <td>MiniMax</td><td>3</td><td>~27 000</td><td>~200 ms</td>
+          <td>Recursive MAX/MIN</td>
+          <td>~700</td>
+        </tr>
+        <tr>
+          <td><span class="tag" style="background:rgba(240,136,62,.15);color:#f0883e;">L4</span></td>
+          <td>Alpha-Beta</td><td>4</td><td>~1 500</td><td>~800 ms</td>
+          <td>α-β window + MVV-LVA</td>
+          <td>~1100</td>
+        </tr>
+        <tr>
+          <td><span class="tag" style="background:rgba(188,140,255,.15);color:#bc8cff;">L5</span></td>
+          <td>Iterative Deep.</td><td>6–8</td><td>~20 000</td><td>2 s</td>
+          <td>ID + TT + Aspiration</td>
+          <td>~1500</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-gold">L6</span></td>
+          <td>Advanced AB</td><td>8–12</td><td>~8 000</td><td>2 s</td>
+          <td>NMP + LMR + Quiescence</td>
+          <td>~1900</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="text-align:center;margin-top:2rem;">
+    <a href="architecture.html" class="btn btn-secondary">See how it all fits together →</a>
+  </p>
+</section>
+
+</div><!-- /main-content -->
+
+<footer>
+  <p>Built with Java 17 &amp; Swing ·
+     <a href="https://github.com/Aayush-Joshi-01/Chess" target="_blank">GitHub ↗</a> ·
+     <a href="index.html">Home</a> ·
+     <a href="architecture.html">Architecture</a>
+  </p>
+</footer>
+
+<script src="assets/app.js"></script>
+<script>
+// ── Random viz ────────────────────────────────────────────
+initRandomViz('random-viz');
+
+// ── Greedy viz ────────────────────────────────────────────
+initGreedyViz('greedy-viz');
+
+// ── Iterative Deepening viz ───────────────────────────────
+initIDViz('id-viz');
+
+// ── MiniMax tree ──────────────────────────────────────────
+const mmNodes = {
+  root: {x:230, y:25,  label:'MAX',  type:'MAX'},
+  a:    {x:80,  y:95,  label:'MIN',  type:'MIN'},
+  b:    {x:230, y:95,  label:'MIN',  type:'MIN'},
+  c:    {x:380, y:95,  label:'MIN',  type:'MIN'},
+  a1:   {x:30,  y:175, label:'3',    leaf:true},
+  a2:   {x:80,  y:175, label:'1',    leaf:true},
+  a3:   {x:130, y:175, label:'7',    leaf:true},
+  b1:   {x:185, y:175, label:'4',    leaf:true},
+  b2:   {x:230, y:175, label:'9',    leaf:true},
+  b3:   {x:275, y:175, label:'5',    leaf:true},
+  c1:   {x:330, y:175, label:'2',    leaf:true},
+  c2:   {x:380, y:175, label:'8',    leaf:true},
+  c3:   {x:430, y:175, label:'6',    leaf:true},
+};
+const treeEdges = [
+  ['root','a'],['root','b'],['root','c'],
+  ['a','a1'],['a','a2'],['a','a3'],
+  ['b','b1'],['b','b2'],['b','b3'],
+  ['c','c1'],['c','c2'],['c','c3'],
+];
+const mmSteps = [
+  {t:'activate',n:'a1'}, {t:'activate',n:'a2'}, {t:'activate',n:'a3'},
+  {t:'label',n:'a',v:'1'}, {t:'activate',n:'a'},
+  {t:'activate',n:'b1'}, {t:'activate',n:'b2'}, {t:'activate',n:'b3'},
+  {t:'label',n:'b',v:'4'}, {t:'activate',n:'b'},
+  {t:'activate',n:'c1'}, {t:'activate',n:'c2'}, {t:'activate',n:'c3'},
+  {t:'label',n:'c',v:'2'}, {t:'activate',n:'c'},
+  {t:'label',n:'root',v:'4'}, {t:'best',n:'root'}, {t:'best',n:'b'}, {t:'best',n:'b1'},
+  {t:'reset'},
+];
+new TreeAnimator('mm-canvas', mmNodes, treeEdges, mmSteps, 520);
+
+// ── Alpha-Beta tree ───────────────────────────────────────
+const abNodes = JSON.parse(JSON.stringify(mmNodes)); // deep copy
+const abSteps = [
+  // A branch — all 3 visited (root α starts at -∞)
+  {t:'activate',n:'a1'}, {t:'activate',n:'a2'}, {t:'activate',n:'a3'},
+  {t:'label',n:'a',v:'1'}, {t:'activate',n:'a'},
+  // B branch — all 3 visited (after A: root α=1)
+  {t:'activate',n:'b1'}, {t:'activate',n:'b2'}, {t:'activate',n:'b3'},
+  {t:'label',n:'b',v:'4'}, {t:'activate',n:'b'},
+  // C branch — c1 visited → β=2 < α=4 → PRUNE c2, c3
+  {t:'activate',n:'c1'},
+  {t:'prune',n:'c2'}, {t:'prune',n:'c3'},
+  {t:'label',n:'c',v:'≤2'}, {t:'activate',n:'c'},
+  {t:'label',n:'root',v:'4'}, {t:'best',n:'root'}, {t:'best',n:'b'}, {t:'best',n:'b1'},
+  {t:'reset'},
+];
+new TreeAnimator('ab-canvas', abNodes, treeEdges, abSteps, 520);
+
+// ── Advanced Alpha-Beta — techniques diagram ──────────────
+(function() {
+  const canvas = document.getElementById('adv-canvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = 460, H = 260;
+  canvas.width  = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Draw a richer tree showing technique zones
+  // Node layout: branching=3, depth=3 with extra quiescence layer
+  const nodes = {
+    root: {x:230, y:20,  r:18, color:'#d4a853', label:'root'},
+    // depth 1
+    n1: {x:80,  y:80,  r:14, color:'#d4a853', label:'N1'},
+    n2: {x:230, y:80,  r:14, color:'#58a6ff', label:'N2', tag:'null-move'},
+    n3: {x:380, y:80,  r:14, color:'#d4a853', label:'N3'},
+    // depth 2
+    n11:{x:30,  y:155, r:11, color:'#d4a853', label:''},
+    n12:{x:80,  y:155, r:11, color:'#f0883e', label:'',  tag:'LMR'},
+    n13:{x:130, y:155, r:11, color:'#f85149', label:'',  tag:'fut.'},
+    n31:{x:330, y:155, r:11, color:'#d4a853', label:''},
+    n32:{x:380, y:155, r:11, color:'#f0883e', label:'',  tag:'LMR'},
+    n33:{x:430, y:155, r:11, color:'#f85149', label:'',  tag:'fut.'},
+    // quiescence nodes below n11
+    q1: {x:10,  y:225, r:8, color:'#39d353', label:'q'},
+    q2: {x:50,  y:225, r:8, color:'#39d353', label:'q'},
+  };
+  const edges = [
+    ['root','n1'],['root','n2'],['root','n3'],
+    ['n1','n11'],['n1','n12'],['n1','n13'],
+    ['n3','n31'],['n3','n32'],['n3','n33'],
+    ['n11','q1'],['n11','q2'],
+  ];
+
+  let tick = 0;
+  const glowing = ['root','n1','n3','n11','q1','q2','n31'];
+  let glowIdx = 0;
+  const glowState = {};
+
+  function drawScene() {
+    ctx.clearRect(0, 0, W, H);
+
+    // null-move zone overlay (n2 branch)
+    ctx.fillStyle = 'rgba(88,166,255,.07)';
+    ctx.beginPath();
+    ctx.roundRect(200, 60, 65, 55, 8);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(88,166,255,.3)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#58a6ff';
+    ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('null-move pruned', 232, 130);
+
+    // edges
+    edges.forEach(([a, b]) => {
+      const na = nodes[a], nb = nodes[b];
+      ctx.beginPath(); ctx.moveTo(na.x, na.y); ctx.lineTo(nb.x, nb.y);
+      ctx.strokeStyle = b === 'q1' || b === 'q2' ? '#39d353' : '#30363d';
+      ctx.lineWidth = b === 'q1' || b === 'q2' ? 1.5 : 1;
+      ctx.setLineDash([]);
+      ctx.stroke();
+    });
+
+    // nodes
+    Object.entries(nodes).forEach(([k, n]) => {
+      // glow pulse
+      const pulse = glowState[k] || 0;
+
+      if (pulse > 0) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 6 * pulse, 0, Math.PI*2);
+        ctx.fillStyle = n.color.replace(')', ',.15)').replace('#', 'rgba(').replace(
+          /rgba\((..)(..)(..),/, (m, r, g, b) =>
+            `rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`
+        );
+        // simpler glow
+        ctx.fillStyle = n.color + '22';
+        ctx.fill();
+      }
+
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+      ctx.fillStyle = n.color;
+      ctx.fill();
+      ctx.strokeStyle = n.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      if (n.label) {
+        ctx.fillStyle = '#0d1117';
+        ctx.font = `bold ${Math.max(7,n.r-2)}px sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(n.label, n.x, n.y);
+      }
+
+      if (n.tag) {
+        ctx.fillStyle = n.color;
+        ctx.font = '7px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(n.tag, n.x, n.y + n.r + 9);
+      }
+    });
+
+    // legend annotations
+    ctx.font = '8px sans-serif';
+    ctx.fillStyle = '#39d353'; ctx.textAlign = 'left';
+    ctx.fillText('← quiescence extension', 65, 230);
+  }
+
+  // gentle pulse animation
+  function animate() {
+    tick++;
+    if (tick % 8 === 0) {
+      const k = glowing[glowIdx % glowing.length];
+      glowState[k] = 1;
+      glowIdx++;
+    }
+    Object.keys(glowState).forEach(k => {
+      glowState[k] = Math.max(0, glowState[k] - 0.06);
+      if (glowState[k] === 0) delete glowState[k];
+    });
+    drawScene();
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

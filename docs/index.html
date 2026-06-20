@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Engine — Java AI Chess</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <meta name="description" content="A fully featured Java chess engine with 6 AI difficulty levels, animated Swing GUI, and opening book support.">
+  <style>
+    /* page-specific */
+    .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-brand">
+    <span class="crown">♔</span>
+    <span>Chess Engine</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="algorithms.html">Algorithms</a></li>
+    <li><a href="architecture.html">Architecture</a></li>
+    <li><a href="https://github.com/Aayush-Joshi-01/Chess/releases/latest" class="nav-download" target="_blank">⬇ Download</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <span class="eyebrow">♟ Java Chess Engine</span>
+      <h1>Play Chess<br>Against Real AI</h1>
+      <p>Six progressively stronger AI engines — from random moves to a 1900+ Elo master — powered by algorithms used in real chess engines.</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/Aayush-Joshi-01/Chess/releases/latest"
+           class="btn btn-primary" target="_blank">
+          ⬇ Download JAR
+        </a>
+        <a href="algorithms.html" class="btn btn-secondary">Explore AI →</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="stat-num">6</div><div class="stat-label">AI Levels</div></div>
+        <div class="stat-item"><div class="stat-num">1900+</div><div class="stat-label">Peak Elo</div></div>
+        <div class="stat-item"><div class="stat-num">10</div><div class="stat-label">Openings</div></div>
+        <div class="stat-item"><div class="stat-num">~0</div><div class="stat-label">Dependencies</div></div>
+      </div>
+    </div>
+
+    <!-- 3D animated chess board -->
+    <div class="board-wrap">
+      <div class="board-3d">
+        <div class="board-grid" id="hero-board"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ──────────────────────────────────────────────── -->
+<section style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-tag">What's Inside</span>
+      <h2>Every Chess Feature, Done Right</h2>
+      <p>Full rules enforcement, silky-smooth Swing GUI, and six completely distinct AI algorithms — each stronger than the last.</p>
+    </div>
+    <div class="features-grid">
+      <div class="card fade-in">
+        <div class="card-icon">♟</div>
+        <h3>Complete Rules</h3>
+        <p>En passant, castling, pawn promotion, check, checkmate, and stalemate — all fully enforced.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="card-icon">🧠</div>
+        <h3>6 AI Algorithms</h3>
+        <p>Random → Greedy → MiniMax → Alpha-Beta → Iterative Deepening → Advanced Alpha-Beta.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="card-icon">🎨</div>
+        <h3>Animated GUI</h3>
+        <p>60 fps piece animations, drag-and-drop, legal move highlights, and a check glow effect.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="card-icon">📖</div>
+        <h3>Opening Book</h3>
+        <p>10 classic openings: Ruy Lopez, Sicilian, French, Queen's Gambit, and more.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="card-icon">⚡</div>
+        <h3>Transposition Table</h3>
+        <p>1M-entry Zobrist hash table avoids re-searching repeated positions, speeding up search 5-10×.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="card-icon">🏆</div>
+        <h3>Quiescence Search</h3>
+        <p>Extends search at tactical positions to prevent the horizon effect — the engine won't miss an obvious recapture.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AI Level Cards ─────────────────────────────────────────── -->
+<section>
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-tag">Difficulty Slider</span>
+      <h2>Six Distinct Engines</h2>
+      <p>Each level uses a completely different algorithm — not just a deeper search.</p>
+    </div>
+    <div class="algo-cards">
+      <a href="algorithms.html#level-1" class="algo-card fade-in">
+        <div class="level-badge l1">L1</div>
+        <h4>Random</h4>
+        <div class="elo">~200 Elo · 0 plies</div>
+      </a>
+      <a href="algorithms.html#level-2" class="algo-card fade-in">
+        <div class="level-badge l2">L2</div>
+        <h4>Greedy</h4>
+        <div class="elo">~400 Elo · 1 ply</div>
+      </a>
+      <a href="algorithms.html#level-3" class="algo-card fade-in">
+        <div class="level-badge l3">L3</div>
+        <h4>MiniMax</h4>
+        <div class="elo">~700 Elo · 3 plies</div>
+      </a>
+      <a href="algorithms.html#level-4" class="algo-card fade-in">
+        <div class="level-badge l4">L4</div>
+        <h4>Alpha-Beta</h4>
+        <div class="elo">~1100 Elo · 4 plies</div>
+      </a>
+      <a href="algorithms.html#level-5" class="algo-card fade-in">
+        <div class="level-badge l5">L5</div>
+        <h4>Iterative Deep.</h4>
+        <div class="elo">~1500 Elo · 6-8 plies</div>
+      </a>
+      <a href="algorithms.html#level-6" class="algo-card fade-in">
+        <div class="level-badge l6">L6</div>
+        <h4>Advanced AB</h4>
+        <div class="elo">~1900 Elo · 8-12 plies</div>
+      </a>
+    </div>
+    <p style="text-align:center;margin-top:1.5rem;">
+      <a href="algorithms.html" class="btn btn-secondary">Deep dive into the algorithms →</a>
+    </p>
+  </div>
+</section>
+
+<!-- ── Download ───────────────────────────────────────────────── -->
+<section>
+  <div class="section-inner">
+    <div class="download-section fade-in">
+      <h2>Ready to Play?</h2>
+      <p>Download the prebuilt JAR — no compile step needed. Just Java 17 and you're running.</p>
+      <div style="margin-bottom:1.5rem;">
+        <span class="req-tag">☕ Java 17+</span>
+        <span class="req-tag">📦 Guava 18.0 (bundled)</span>
+        <span class="req-tag">🖥 Windows / macOS / Linux</span>
+      </div>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="https://github.com/Aayush-Joshi-01/Chess/releases/latest"
+           class="btn btn-primary" target="_blank">
+          ⬇ Download Latest JAR
+        </a>
+        <a href="https://github.com/Aayush-Joshi-01/Chess#building-from-source"
+           class="btn btn-secondary" target="_blank">
+          🔨 Build from Source
+        </a>
+      </div>
+      <p style="margin-top:1.5rem;font-size:.8rem;color:var(--muted);">
+        Run with: <code style="background:var(--raised);padding:.2rem .5rem;border-radius:4px;font-family:monospace;">java -jar Chess.jar</code>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer>
+  <p>Built with Java 17 &amp; Swing ·
+     <a href="https://github.com/Aayush-Joshi-01/Chess" target="_blank">GitHub ↗</a> ·
+     <a href="algorithms.html">Algorithm Docs</a> ·
+     <a href="architecture.html">Architecture</a>
+  </p>
+</footer>
+
+<script src="assets/app.js"></script>
+<script>
+/* ── Build chess board ────────────────────────────────── */
+(function() {
+  const board = document.getElementById('hero-board');
+  if (!board) return;
+
+  // Unicode chess pieces indexed by [rank 0-7][file 0-7]
+  // rank 0 = row 8 (black pieces), rank 7 = row 1 (white pieces)
+  const layout = [
+    ['♜','♞','♝','♛','♚','♝','♞','♜'],
+    ['♟','♟','♟','♟','♟','♟','♟','♟'],
+    [  '',  '',  '',  '',  '',  '',  '',  ''],
+    [  '',  '',  '',  '',  '',  '',  '',  ''],
+    [  '',  '',  '',  '♙',  '',  '',  '',  ''],
+    [  '',  '',  '',  '',  '♘',  '',  '',  ''],
+    ['♙','♙','♙','',  '♙','♙','♙','♙'],
+    ['♖','♘','♗','♕','♔','♗','',  '♖'],
+  ];
+
+  const whitePieces = new Set(['♙','♖','♘','♗','♕','♔']);
+  // animated squares: rank,file → animation class
+  const animated = { '4,3':'piece-anim-1', '5,4':'piece-anim-2', '7,4':'piece-anim-3' };
+
+  layout.forEach((row, r) => {
+    row.forEach((piece, f) => {
+      const sq = document.createElement('div');
+      sq.className = 'sq ' + ((r + f) % 2 === 0 ? 'light' : 'dark');
+      if (piece) {
+        const span = document.createElement('span');
+        span.className = 'piece ' + (whitePieces.has(piece) ? 'white' : 'black');
+        const animClass = animated[`${r},${f}`];
+        if (animClass) span.classList.add(animClass);
+        span.textContent = piece;
+        sq.appendChild(span);
+      }
+      board.appendChild(sq);
+    });
+  });
+})();
+</script>
+</body>
+</html>
