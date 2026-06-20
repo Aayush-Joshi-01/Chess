@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture — Chess Engine</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    .page-hero {
+      padding: 120px 2rem 4rem; text-align:center;
+      background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(88,166,255,.08) 0%, transparent 70%);
+      border-bottom:1px solid var(--border);
+    }
+    .page-hero h1 {
+      font-size:clamp(2rem,4vw,3.2rem); font-weight:800;
+      background: linear-gradient(135deg, #a8d8ff, #58a6ff);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      margin-bottom:.75rem;
+    }
+    .page-hero p { color:var(--muted); max-width:48ch; margin:0 auto; font-size:1.05rem; }
+
+    .main-content { max-width:1100px; margin:0 auto; padding:0 2rem 5rem; }
+
+    /* Layer diagram */
+    .layer-diagram {
+      display:flex; flex-direction:column; gap:0;
+      border:1px solid var(--border); border-radius:var(--r); overflow:hidden;
+      margin:2rem 0;
+    }
+    .layer {
+      padding:1.4rem 1.8rem;
+      border-bottom:1px solid var(--border);
+      opacity:0; transform:translateY(16px);
+      transition: opacity .5s ease, transform .5s ease;
+      position:relative;
+    }
+    .layer:last-child { border-bottom:none; }
+    .layer.visible { opacity:1; transform:none; }
+    .layer-header { display:flex; align-items:center; gap:.9rem; margin-bottom:.75rem; }
+    .layer-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+    .layer-header h3 { font-size:1rem; font-weight:700; }
+    .layer-header .layer-badge-text {
+      font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
+      color:var(--muted); margin-left:auto;
+    }
+    .layer-components {
+      display:flex; flex-wrap:wrap; gap:.5rem;
+    }
+    .comp-chip {
+      background:var(--raised); border:1px solid var(--border);
+      border-radius:var(--r-sm); padding:.45rem .85rem;
+      font-size:.8rem; font-weight:600; line-height:1.2;
+    }
+    .comp-chip small { display:block; font-size:.68rem; color:var(--muted); font-weight:400; font-family:monospace; margin-top:.15rem; }
+
+    /* connector arrow between layers */
+    .layer-arrow {
+      text-align:center; color:var(--muted); font-size:.8rem;
+      padding:.3rem 0; background:var(--bg);
+      border-left:1px solid var(--border); border-right:1px solid var(--border);
+    }
+
+    /* Data flow */
+    .flow-diagram {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r); padding:2rem; margin:2rem 0;
+      overflow-x:auto;
+    }
+    .flow-row {
+      display:flex; align-items:center; gap:.5rem;
+      flex-wrap:nowrap; min-width:600px;
+    }
+    .flow-node {
+      background:var(--raised); border:1px solid var(--border);
+      border-radius:var(--r-sm); padding:.6rem 1rem;
+      font-size:.82rem; font-weight:600; text-align:center;
+      white-space:nowrap; flex-shrink:0;
+      transition:all .25s;
+    }
+    .flow-node:hover { border-color:var(--gold); color:var(--gold); }
+    .flow-node.gui   { border-color:var(--green);  color:var(--green);  background:rgba(63,185,80,.08); }
+    .flow-node.engine{ border-color:var(--blue);   color:var(--blue);   background:rgba(88,166,255,.08); }
+    .flow-node.ai    { border-color:var(--gold);   color:var(--gold);   background:rgba(212,168,83,.08); }
+    .flow-arrow-h { color:var(--muted); font-size:1rem; flex-shrink:0; }
+    .flow-label { font-size:.7rem; color:var(--muted); text-align:center; margin-top:.3rem; }
+
+    /* Zobrist / TT explainer */
+    .hash-demo {
+      background:var(--raised); border:1px solid var(--border);
+      border-radius:var(--r); padding:1.5rem; font-family:monospace;
+      font-size:.82rem; line-height:1.9; overflow-x:auto;
+    }
+    .hash-demo .kw { color:var(--blue); }
+    .hash-demo .val{ color:var(--green); }
+    .hash-demo .cmt{ color:var(--muted); }
+
+    /* Board state diagram */
+    .board-state-diagram {
+      display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;
+    }
+    @media(max-width:640px) { .board-state-diagram { grid-template-columns:1fr; } }
+    .bsd-box {
+      background:var(--raised); border:1px solid var(--border);
+      border-radius:var(--r-sm); padding:1.2rem;
+    }
+    .bsd-box h4 { font-size:.85rem; font-weight:700; margin-bottom:.75rem; color:var(--gold); }
+    .bsd-row { display:flex; justify-content:space-between; padding:.25rem 0;
+      border-bottom:1px solid rgba(48,54,61,.5); font-size:.82rem; }
+    .bsd-row:last-child { border-bottom:none; }
+    .bsd-key { color:var(--muted); }
+    .bsd-val { color:var(--text); font-family:monospace; font-size:.78rem; }
+
+    /* Immutability note */
+    .info-box {
+      background:rgba(88,166,255,.07); border:1px solid rgba(88,166,255,.25);
+      border-radius:var(--r-sm); padding:1rem 1.25rem;
+      font-size:.88rem; color:var(--muted); margin:1.5rem 0;
+    }
+    .info-box strong { color:var(--blue); }
+
+    h2.section-title {
+      font-size:1.5rem; font-weight:800; margin:3rem 0 .75rem;
+      padding-bottom:.5rem; border-bottom:1px solid var(--border);
+    }
+    h2.section-title + p { color:var(--muted); margin-bottom:1.5rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-brand"><span class="crown">♔</span><span>Chess Engine</span></div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="algorithms.html">Algorithms</a></li>
+    <li><a href="architecture.html">Architecture</a></li>
+    <li><a href="https://github.com/Aayush-Joshi-01/Chess/releases/latest" class="nav-download" target="_blank">⬇ Download</a></li>
+  </ul>
+</nav>
+
+<!-- ── Page Hero ─────────────────────────────────────────────── -->
+<div class="page-hero">
+  <span class="section-tag">System Design</span>
+  <h1>How It's Built</h1>
+  <p>Three clean layers — GUI, Engine, and AI — with one-way dependencies and no shared mutable state.</p>
+</div>
+
+<div class="main-content">
+
+  <!-- ── Layer Diagram ─────────────────────────────────────────── -->
+  <h2 class="section-title">System Layers</h2>
+  <p>Each layer only knows about the layer below it. The GUI never calls an AI method directly, and the engine never imports a GUI class.</p>
+
+  <div class="layer-diagram">
+    <!-- GUI Layer -->
+    <div class="layer" id="lay-gui">
+      <div class="layer-header">
+        <div class="layer-dot" style="background:#3fb950"></div>
+        <h3>Presentation Layer — GUI</h3>
+        <span class="layer-badge-text">com.chess.gui</span>
+      </div>
+      <div class="layer-components">
+        <div class="comp-chip">Table (JFrame)<small>Table.java</small></div>
+        <div class="comp-chip">BoardPanel<small>BoardPanel.java</small></div>
+        <div class="comp-chip">TilePanel<small>TilePanel.java</small></div>
+        <div class="comp-chip">AnimationManager<small>AnimationManager.java</small></div>
+        <div class="comp-chip">GameHistoryPanel<small>GameHistoryPanel.java</small></div>
+        <div class="comp-chip">TakenPiecesPanel<small>TakenPiecesPanel.java</small></div>
+        <div class="comp-chip">GameSetup<small>GameSetup.java</small></div>
+      </div>
+    </div>
+    <div class="layer-arrow">▼ calls into Engine for move execution &amp; board state</div>
+
+    <!-- Engine Layer -->
+    <div class="layer" id="lay-engine">
+      <div class="layer-header">
+        <div class="layer-dot" style="background:#58a6ff"></div>
+        <h3>Domain Layer — Engine</h3>
+        <span class="layer-badge-text">com.chess.engine</span>
+      </div>
+      <div class="layer-components">
+        <div class="comp-chip">Board<small>board/Board.java</small></div>
+        <div class="comp-chip">Tile<small>board/Tile.java</small></div>
+        <div class="comp-chip">BoardUtils<small>board/BoardUtils.java</small></div>
+        <div class="comp-chip">Move<small>board/Move.java</small></div>
+        <div class="comp-chip">Piece (abstract)<small>pieces/Piece.java</small></div>
+        <div class="comp-chip">King / Queen / Rook…<small>pieces/*.java</small></div>
+        <div class="comp-chip">Player<small>player/Player.java</small></div>
+        <div class="comp-chip">WhitePlayer<small>player/WhitePlayer.java</small></div>
+        <div class="comp-chip">BlackPlayer<small>player/BlackPlayer.java</small></div>
+        <div class="comp-chip">MoveTransition<small>player/MoveTransition.java</small></div>
+      </div>
+    </div>
+    <div class="layer-arrow">▼ provides Board snapshots to AI for evaluation</div>
+
+    <!-- AI Layer -->
+    <div class="layer" id="lay-ai">
+      <div class="layer-header">
+        <div class="layer-dot" style="background:#d4a853"></div>
+        <h3>Intelligence Layer — AI</h3>
+        <span class="layer-badge-text">com.chess.engine.player.ai</span>
+      </div>
+      <div class="layer-components">
+        <div class="comp-chip">AIThinkTank<small>AIThinkTank.java</small></div>
+        <div class="comp-chip">MoveStrategy (iface)<small>MoveStrategy.java</small></div>
+        <div class="comp-chip">StandardBoardEvaluator<small>StandardBoardEvaluator.java</small></div>
+        <div class="comp-chip">MoveOrdering<small>MoveOrdering.java</small></div>
+        <div class="comp-chip">ZobristHasher<small>ZobristHasher.java</small></div>
+        <div class="comp-chip">TranspositionTable<small>TranspositionTable.java</small></div>
+        <div class="comp-chip">OpeningBook<small>OpeningBook.java</small></div>
+        <div class="comp-chip">RandomMoveStrategy<small>L1</small></div>
+        <div class="comp-chip">GreedyStrategy<small>L2</small></div>
+        <div class="comp-chip">MiniMaxStrategy<small>L3</small></div>
+        <div class="comp-chip">AlphaBetaStrategy<small>L4</small></div>
+        <div class="comp-chip">IterativeDeepeningStrategy<small>L5</small></div>
+        <div class="comp-chip">AdvancedAlphaBetaStrategy<small>L6</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Immutable Board ──────────────────────────────────────── -->
+  <h2 class="section-title">Immutable Board State</h2>
+  <p>The engine's core insight: <strong>Board is immutable</strong>. Every move creates a brand new Board — the old one is never modified.</p>
+
+  <div class="info-box">
+    <strong>Why immutability?</strong> The AI evaluates thousands of positions per second. With a mutable board, every branch would need an explicit undo step. With an immutable board, the AI simply holds a reference to the original — garbage collection handles cleanup. Guava's <code>ImmutableList</code> and <code>ImmutableMap</code> make this zero-cost.
+  </div>
+
+  <div class="board-state-diagram fade-in">
+    <div class="bsd-box">
+      <h4>Board fields (all final)</h4>
+      <div class="bsd-row"><span class="bsd-key">gameBoard</span><span class="bsd-val">ImmutableList&lt;Tile&gt; (64)</span></div>
+      <div class="bsd-row"><span class="bsd-key">whitePieces</span><span class="bsd-val">ImmutableList&lt;Piece&gt;</span></div>
+      <div class="bsd-row"><span class="bsd-key">blackPieces</span><span class="bsd-val">ImmutableList&lt;Piece&gt;</span></div>
+      <div class="bsd-row"><span class="bsd-key">whitePlayer</span><span class="bsd-val">WhitePlayer</span></div>
+      <div class="bsd-row"><span class="bsd-key">blackPlayer</span><span class="bsd-val">BlackPlayer</span></div>
+      <div class="bsd-row"><span class="bsd-key">currentPlayer</span><span class="bsd-val">Player (white|black)</span></div>
+      <div class="bsd-row"><span class="bsd-key">enPassantPawn</span><span class="bsd-val">Pawn | null</span></div>
+      <div class="bsd-row"><span class="bsd-key">nextMoveMaker</span><span class="bsd-val">Alliance (WHITE|BLACK)</span></div>
+    </div>
+    <div class="bsd-box">
+      <h4>Move execution (no mutation)</h4>
+      <div class="bsd-row"><span class="bsd-key">move.execute()</span><span class="bsd-val">returns new Board</span></div>
+      <div class="bsd-row"><span class="bsd-key">Builder pattern</span><span class="bsd-val">collects changes</span></div>
+      <div class="bsd-row"><span class="bsd-key">setPiece()</span><span class="bsd-val">adds to Builder map</span></div>
+      <div class="bsd-row"><span class="bsd-key">setMoveMaker()</span><span class="bsd-val">flips alliance</span></div>
+      <div class="bsd-row"><span class="bsd-key">build()</span><span class="bsd-val">constructs new Board</span></div>
+      <div class="bsd-row"><span class="bsd-key">old Board</span><span class="bsd-val">GC-eligible immediately</span></div>
+      <div class="bsd-row"><span class="bsd-key">undo</span><span class="bsd-val">not needed (hold ref)</span></div>
+    </div>
+  </div>
+
+  <!-- ── Data Flow ────────────────────────────────────────────── -->
+  <h2 class="section-title">Move Execution Flow</h2>
+  <p>Trace of a single move from user click to board update — including the AI's background computation.</p>
+
+  <div class="flow-diagram fade-in">
+    <div style="margin-bottom:1.2rem;">
+      <div class="flow-row">
+        <div class="flow-node gui">User Click<br><small style="font-size:.7rem;color:inherit;opacity:.7;">TilePanel</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node gui">Move Factory<br><small style="font-size:.7rem;color:inherit;opacity:.7;">createMove()</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node engine">Player<br><small style="font-size:.7rem;color:inherit;opacity:.7;">makeMove()</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node engine">MoveTransition<br><small style="font-size:.7rem;color:inherit;opacity:.7;">status check</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node engine">New Board<br><small style="font-size:.7rem;color:inherit;opacity:.7;">immutable</small></div>
+      </div>
+      <div class="flow-label">Human move path (EDT thread)</div>
+    </div>
+    <div style="text-align:center;color:var(--muted);margin:0 0 1.2rem;font-size:.85rem;">↓ if AI's turn, hand off to background thread</div>
+    <div>
+      <div class="flow-row">
+        <div class="flow-node gui">AIThinkTank<br><small style="font-size:.7rem;color:inherit;opacity:.7;">SwingWorker</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node ai">OpeningBook<br><small style="font-size:.7rem;color:inherit;opacity:.7;">lookup hash</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node ai">Strategy.execute()<br><small style="font-size:.7rem;color:inherit;opacity:.7;">L1–L6</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node engine">Best Move<br><small style="font-size:.7rem;color:inherit;opacity:.7;">returned</small></div>
+        <div class="flow-arrow-h">→</div>
+        <div class="flow-node gui">BoardPanel<br><small style="font-size:.7rem;color:inherit;opacity:.7;">animate + redraw</small></div>
+      </div>
+      <div class="flow-label">AI move path (background worker → EDT callback)</div>
+    </div>
+  </div>
+
+  <!-- ── Evaluation Function ──────────────────────────────────── -->
+  <h2 class="section-title">Board Evaluation</h2>
+  <p>All AI levels from L2 upward share the same evaluator. It returns centipawns from White's perspective.</p>
+
+  <div class="grid-2 fade-in" style="margin:1.5rem 0;">
+    <div class="card">
+      <h3>Material Score</h3>
+      <p>Piece values (centipawns): Pawn = 100 · Knight = 320 · Bishop = 330 · Rook = 500 · Queen = 900. Summed for White, subtracted for Black.</p>
+    </div>
+    <div class="card">
+      <h3>Piece-Square Tables</h3>
+      <p>Each piece type has a 64-value PST from the Chess Programming Wiki. A pawn on e4 is worth more than one on a2 — the PST captures this positional bonus.</p>
+    </div>
+    <div class="card">
+      <h3>Mobility Bonus</h3>
+      <p>+5 cp per legal move available. A player with more legal moves has more options — rewarded explicitly even before searching them.</p>
+    </div>
+    <div class="card">
+      <h3>Check &amp; Checkmate</h3>
+      <p>+50 cp for delivering check. +10 000 + depth for checkmate — the depth term makes the engine prefer faster mates over slower ones.</p>
+    </div>
+    <div class="card">
+      <h3>Pawn Structure</h3>
+      <p>Penalties for doubled (−30) and isolated (−20) pawns. Bonus for passed pawns. Blocked pawn: −10 per rank it cannot advance.</p>
+    </div>
+    <div class="card">
+      <h3>Rook Files</h3>
+      <p>+25 cp for a rook on an open file (no pawns). +10 cp for a half-open file (only opponent pawns). Rooks belong on open files.</p>
+    </div>
+  </div>
+
+  <!-- ── Zobrist Hashing ─────────────────────────────────────── -->
+  <h2 class="section-title">Zobrist Hashing &amp; Transposition Table</h2>
+  <p>Levels 5 and 6 fingerprint every board position with a 64-bit hash — enabling the cache that makes deep search possible.</p>
+
+  <div class="hash-demo fade-in">
+<span class="cmt">// At startup: assign a random 64-bit key to every (piece, square) pair</span>
+<span class="kw">static</span> long[<span class="val">12</span>][<span class="val">64</span>] pieceSquareKeys = <span class="kw">new</span> long[<span class="val">12</span>][<span class="val">64</span>];
+<span class="cmt">// → 768 random longs, generated once, stored statically</span>
+
+<span class="cmt">// Hash a full board position:</span>
+long hash = <span class="val">0L</span>;
+<span class="kw">for</span> (Piece p : board.getAllPieces()) {
+    hash ^= pieceSquareKeys[pieceIndex(p)][p.getPiecePosition()];
+}
+<span class="kw">if</span> (board.currentPlayer().getAlliance() == Alliance.BLACK) hash ^= sideToMoveKey;
+<span class="cmt">// XOR is reversible: moving a piece = XOR out old square, XOR in new square (O(1))</span>
+
+<span class="cmt">// Transposition Table probe:</span>
+TTEntry entry = tt.probe(hash);
+<span class="kw">if</span> (entry != <span class="val">null</span> &amp;&amp; entry.depth >= depth) {
+    <span class="kw">if</span>      (entry.flag == EXACT) <span class="kw">return</span> entry.score;
+    <span class="kw">else if</span> (entry.flag == LOWER) alpha = Math.max(alpha, entry.score);
+    <span class="kw">else if</span> (entry.flag == UPPER) beta  = Math.min(beta,  entry.score);
+    <span class="kw">if</span> (alpha >= beta) <span class="kw">return</span> entry.score; <span class="cmt">// TT cutoff</span>
+}
+  </div>
+
+  <div class="grid-2 fade-in" style="margin-top:1.5rem;">
+    <div class="card">
+      <h3>Why XOR?</h3>
+      <p>XOR is its own inverse. Moving a piece from e2→e4 is two XOR operations: remove the piece at e2, add it at e4. No rehashing from scratch — O(1) incremental update per move.</p>
+    </div>
+    <div class="card">
+      <h3>TT Entry Flags</h3>
+      <p><strong>EXACT</strong> — score is exact, from a fully searched window. <strong>LOWER</strong> — caused a β-cutoff, score is a lower bound. <strong>UPPER</strong> — all moves failed low, score is an upper bound.</p>
+    </div>
+  </div>
+
+  <!-- ── Observer / Threading ────────────────────────────────── -->
+  <h2 class="section-title">Threading &amp; Observer Pattern</h2>
+  <p>The GUI stays responsive while the AI thinks by running search on a background SwingWorker thread.</p>
+
+  <div class="flow-diagram fade-in">
+    <div class="flow-row" style="justify-content:center;flex-wrap:wrap;gap:1rem;">
+      <div style="text-align:center;">
+        <div class="flow-node" style="min-width:130px;">EDT (Swing thread)<br><small style="font-size:.7rem;opacity:.7">renders UI, handles input</small></div>
+        <div class="flow-label">never blocked</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <span style="font-size:.8rem;color:var(--muted);">fires<br>SwingWorker</span>
+        <div class="flow-arrow-h" style="font-size:1.5rem;">⇆</div>
+        <span style="font-size:.8rem;color:var(--muted);">done()<br>callback on EDT</span>
+      </div>
+      <div style="text-align:center;">
+        <div class="flow-node ai" style="min-width:130px;">Worker thread<br><small style="font-size:.7rem;opacity:.7">AIThinkTank.doInBackground()</small></div>
+        <div class="flow-label">runs search in background</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box" style="margin-top:1.5rem;">
+    <strong>Observer pattern:</strong> <code>Table</code> subscribes to move events via a <code>GameObserver</code> interface. When human or AI makes a move, the observer fires — the board redraws, history updates, and the next turn is triggered. Neither the engine nor the AI need to import any GUI class.
+  </div>
+
+  <!-- ── Opening Book ──────────────────────────────────────────── -->
+  <h2 class="section-title">Opening Book</h2>
+  <p>The first 10 half-moves use a hand-coded book of 10 openings keyed by Zobrist hash.</p>
+
+  <div class="grid-3 fade-in">
+    <div class="card"><h3>Ruy Lopez</h3><p>1.e4 e5 2.Nf3 Nc6 3.Bb5 — classic open game, white targets e5 pawn.</p></div>
+    <div class="card"><h3>Sicilian Defence</h3><p>1.e4 c5 — black fights for the d4 square asymmetrically.</p></div>
+    <div class="card"><h3>French Defence</h3><p>1.e4 e6 — solid, leads to closed pawn structures.</p></div>
+    <div class="card"><h3>Caro-Kann</h3><p>1.e4 c6 — solid defense without early pawn weaknesses.</p></div>
+    <div class="card"><h3>Queen's Gambit</h3><p>1.d4 d5 2.c4 — offers a pawn to gain central control.</p></div>
+    <div class="card"><h3>King's Indian</h3><p>1.d4 Nf6 2.c4 g6 — dynamic counterplay, black fianchettoes.</p></div>
+    <div class="card"><h3>London System</h3><p>1.d4 2.Nf3 3.Bf4 — solid, non-theoretical white setup.</p></div>
+    <div class="card"><h3>Italian Game</h3><p>1.e4 e5 2.Nf3 Nc6 3.Bc4 — central control, rapid development.</p></div>
+    <div class="card"><h3>English Opening</h3><p>1.c4 — hypermodern, controls d5 from a distance.</p></div>
+    <div class="card"><h3>Pirc Defence</h3><p>1.e4 d6 — flexible defense, black challenges center later.</p></div>
+  </div>
+
+  <p style="text-align:center;margin-top:3rem;">
+    <a href="algorithms.html" class="btn btn-secondary">← Explore the AI algorithms</a>
+    &nbsp;
+    <a href="https://github.com/Aayush-Joshi-01/Chess" class="btn btn-primary" target="_blank">View Source ↗</a>
+  </p>
+
+</div><!-- /main-content -->
+
+<footer>
+  <p>Built with Java 17 &amp; Swing ·
+     <a href="https://github.com/Aayush-Joshi-01/Chess" target="_blank">GitHub ↗</a> ·
+     <a href="index.html">Home</a> ·
+     <a href="algorithms.html">Algorithms</a>
+  </p>
+</footer>
+
+<script src="assets/app.js"></script>
+<script>
+// Stagger layer reveal
+const layers = document.querySelectorAll('.layer');
+const layerObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const layers2 = e.target.closest('.layer-diagram').querySelectorAll('.layer');
+      layers2.forEach((l, i) => {
+        setTimeout(() => l.classList.add('visible'), i * 180);
+      });
+      layerObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+if (layers.length) layerObs.observe(layers[0]);
+</script>
+</body>
+</html>
